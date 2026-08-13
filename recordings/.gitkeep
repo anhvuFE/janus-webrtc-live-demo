@@ -1,0 +1,2 @@
+# MediaMTX writes recordings here (mounted into the container).
+# Files are gitignored; this keeps the folder in the repo.

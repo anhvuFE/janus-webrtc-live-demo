@@ -33,3 +33,16 @@ services:
       - "3478:3478"
       - "3478:3478/udp"
       - "49160-49200:49160-49200/udp"   # TURN relay range
+
+  # Buffered path: WHIP ingest -> LL-HLS egress (see mediamtx/mediamtx.yml).
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: mediamtx-demo
+    restart: unless-stopped
+    volumes:
+      - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
+      - ./recordings:/recordings   # server-side recordings (fMP4)
+    ports:
+      - "8888:8888"           # LL-HLS egress
+      - "8889:8889"           # WebRTC / WHIP ingest (signaling)
+      - "8189:8189/udp"       # WebRTC ICE media (mux)

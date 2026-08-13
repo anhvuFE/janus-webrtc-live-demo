@@ -1,38 +1,13 @@
 import Link from "next/link";
 import { MediaWall } from "@/components/MediaWall";
+import { AppMarquee } from "@/components/AppMarquee";
 import { Pricing } from "@/components/Pricing";
 
-const SHOTS = [
-  {
-    grad: "linear-gradient(135deg,#1e293b,#0f172a)",
-    title: "Sub-second WebRTC",
-    desc: "Present or watch live over Janus VideoRoom with sub-second glass-to-glass latency.",
-  },
-  {
-    grad: "linear-gradient(135deg,#3b0764,#1e1b4b)",
-    title: "Multi-presenter stage",
-    desc: "Everyone publishes and subscribes — a real video village with data-channel chat.",
-  },
-  {
-    grad: "linear-gradient(135deg,#0c4a6e,#082f49)",
-    title: "LL-HLS + recording",
-    desc: "WHIP ingest remuxed to Low-Latency HLS, archived server-side as fragmented MP4.",
-  },
-];
-
-const SOURCES = [
-  "Camera",
-  "Screen",
-  "OBS",
-  "Premiere",
-  "Resolve",
-  "After Effects",
-  "Chrome",
-  "Keynote",
-  "Figma",
-  "Unreal",
-  "vMix",
-  "Any WHIP",
+// Mock conferencing windows shown above the performance stats.
+const CALLS = [
+  { title: "Zoom Meeting", variant: "zoom", share: "green" },
+  { title: "Teams Meeting", variant: "teams", share: "indigo" },
+  { title: "Google Meet", variant: "meet", share: "red" },
 ];
 
 const USE_CASES = [
@@ -44,12 +19,6 @@ const USE_CASES = [
   { g: "linear-gradient(135deg,#6366f1,#312e81)", t: "Remote teaching", d: "Lectures with chat and recording." },
   { g: "linear-gradient(135deg,#eab308,#713f12)", t: "Watch parties", d: "Synced playback with reactions." },
   { g: "linear-gradient(135deg,#06b6d4,#164e63)", t: "Live sports", d: "Multi-cam feeds, minimal delay." },
-];
-
-const STEPS = [
-  { n: "01", t: "Bring up the stack", d: "docker compose up starts Janus, coturn and MediaMTX." },
-  { n: "02", t: "Open a room", d: "Head to /present or /stage and allow your camera." },
-  { n: "03", t: "Go live", d: "Viewers watch on /watch or the buffered /hls path." },
 ];
 
 const FAQS = [
@@ -121,18 +90,33 @@ export default function Home() {
         </p>
       </section>
 
-      <section className="ev-cards">
-        {SHOTS.map((s) => (
-          <div className="ev-card" key={s.title}>
-            <div className="ev-shot" style={{ background: s.grad }}>
-              <div className="ev-shot-bar">
-                <span />
-                <span />
-                <span />
-              </div>
+      <section className="ev-calls">
+        {CALLS.map((c) => (
+          <div className={`ev-call ${c.variant}`} key={c.title}>
+            <div className="ev-call-bar">
+              <span className="ev-call-dots">
+                <i />
+                <i />
+                <i />
+              </span>
+              <span className="ev-call-title">{c.title}</span>
             </div>
-            <h3>{s.title}</h3>
-            <p>{s.desc}</p>
+            <div className="ev-call-strip">
+              <span style={{ background: "#3f4a63" }} />
+              <span style={{ background: "#5b4a63" }} />
+              <span style={{ background: "#4a6355" }} />
+            </div>
+            <div
+              className="ev-call-stage"
+              style={{ backgroundImage: "url(/wall/1.jpg)" }}
+            />
+            <div className="ev-call-toolbar">
+              <i />
+              <i />
+              <i className={`share ${c.share}`} />
+              <i />
+              <i />
+            </div>
           </div>
         ))}
       </section>
@@ -159,14 +143,14 @@ export default function Home() {
           Stream any source — a camera, a screen, or any of 100+ apps — with
           adaptive bitrate and enterprise-grade delivery.
         </p>
-        <div className="ev-apps">
-          {SOURCES.map((s) => (
-            <span className="ev-app" key={s}>
-              {s}
-            </span>
-          ))}
+        <div className="ev-cta-row" style={{ marginTop: 26 }}>
+          <Link href="/broadcast">
+            <button className="ev-btn">Try it for free →</button>
+          </Link>
         </div>
       </section>
+
+      <AppMarquee />
 
       <section className="ev-band">
         <span className="ev-eyebrow">For moments that matter</span>
@@ -185,17 +169,52 @@ export default function Home() {
       <Pricing />
 
       <section className="ev-band">
-        <span className="ev-eyebrow">One stack, three steps</span>
         <h2 className="ev-h2">Supercharge your streaming</h2>
+        <p className="ev-sub">
+          Share content with unparalleled quality — all within the tools and
+          stack you already run.
+        </p>
       </section>
-      <section className="ev-steps">
-        {STEPS.map((s) => (
-          <div className="ev-step" key={s.n}>
-            <span className="ev-step-n">{s.n}</span>
-            <strong>{s.t}</strong>
-            <span>{s.d}</span>
+      <section className="ev-super">
+        <div className="ev-super-card">
+          <div className="ev-super-vis ev-super-connect">
+            <span className="ev-mini-mark">JW</span>
+            <span className="ev-super-arrow">→</span>
+            <span className="ev-mini-app" style={{ background: "linear-gradient(160deg,#38bdf8,#1d4ed8)" }} />
           </div>
-        ))}
+          <strong>Bring up the stack</strong>
+          <span>
+            <code>docker compose up</code> starts Janus, coturn and MediaMTX.
+          </span>
+        </div>
+
+        <div className="ev-super-card">
+          <div className="ev-super-vis ev-super-apps">
+            {["#38bdf8", "#f97316", "#a855f7", "#22c55e", "#ef4444", "#6366f1"].map(
+              (c, i) => (
+                <span key={i} style={{ background: c }} />
+              )
+            )}
+          </div>
+          <strong>Pick a source</strong>
+          <span>Camera, screen or any of 100+ apps — publish over WHIP.</span>
+        </div>
+
+        <div className="ev-super-card">
+          <div className="ev-super-vis ev-super-player">
+            <div
+              className="ev-super-shot"
+              style={{ backgroundImage: "url(/wall/9.jpg)" }}
+            />
+            <div className="ev-super-panel">
+              <i />
+              <i />
+              <i />
+            </div>
+          </div>
+          <strong>Adjust and go live</strong>
+          <span>Set resolution, fps and bitrate, then present with a watermark.</span>
+        </div>
       </section>
 
       <section id="faq" className="ev-band">

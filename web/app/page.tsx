@@ -11,14 +11,14 @@ const CALLS = [
 ];
 
 const USE_CASES = [
-  { g: "linear-gradient(135deg,#f59e0b,#7c2d12)", t: "Live events", d: "Broadcast keynotes to many viewers." },
-  { g: "linear-gradient(135deg,#0ea5e9,#0c4a6e)", t: "Client reviews", d: "Frame-accurate remote approvals." },
-  { g: "linear-gradient(135deg,#a855f7,#3b0764)", t: "Town halls", d: "All-hands with low latency at scale." },
-  { g: "linear-gradient(135deg,#10b981,#064e3b)", t: "Creative sessions", d: "Shoulder-to-shoulder editing remotely." },
-  { g: "linear-gradient(135deg,#f43f5e,#831843)", t: "Product demos", d: "Show a screen/app in crisp quality." },
-  { g: "linear-gradient(135deg,#6366f1,#312e81)", t: "Remote teaching", d: "Lectures with chat and recording." },
-  { g: "linear-gradient(135deg,#eab308,#713f12)", t: "Watch parties", d: "Synced playback with reactions." },
-  { g: "linear-gradient(135deg,#06b6d4,#164e63)", t: "Live sports", d: "Multi-cam feeds, minimal delay." },
+  { img: "/usecases/1.jpg", t: "Live events", d: "Broadcast keynotes to many viewers." },
+  { img: "/usecases/2.jpg", t: "Client reviews", d: "Frame-accurate remote approvals." },
+  { img: "/usecases/3.jpg", t: "Town halls", d: "All-hands with low latency at scale." },
+  { img: "/usecases/4.jpg", t: "Creative sessions", d: "Shoulder-to-shoulder editing remotely." },
+  { img: "/usecases/5.jpg", t: "Product demos", d: "Show a screen/app in crisp quality." },
+  { img: "/usecases/6.jpg", t: "Remote teaching", d: "Lectures with chat and recording." },
+  { img: "/usecases/7.jpg", t: "Watch parties", d: "Synced playback with reactions." },
+  { img: "/usecases/8.jpg", t: "Live sports", d: "Multi-cam feeds, minimal delay." },
 ];
 
 const FAQS = [
@@ -160,7 +160,10 @@ export default function Home() {
       <section className="ev-usecases">
         {USE_CASES.map((u) => (
           <div className="ev-uc" key={u.t}>
-            <div className="ev-uc-img" style={{ background: u.g }} />
+            <div
+              className="ev-uc-img"
+              style={{ backgroundImage: `url(${u.img})` }}
+            />
             <strong>{u.t}</strong>
             <span>{u.d}</span>
           </div>

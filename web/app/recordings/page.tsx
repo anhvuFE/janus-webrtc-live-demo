@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { RecordingEntry } from "@/lib/recordings";
 import { NotesPanel } from "@/components/NotesPanel";
 import { TheaterButton } from "@/components/TheaterButton";
+import { AppHeader } from "@/components/AppHeader";
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -43,16 +44,15 @@ export default function RecordingsPage() {
 
   return (
     <main className="container">
-      <div className="topbar">
-        <Link className="back" href="/">
-          ← Back
-        </Link>
-        <button onClick={load} disabled={loading}>
-          {loading ? "Refreshing…" : "Refresh"}
-        </button>
-      </div>
+      <AppHeader
+        badge={
+          <button onClick={load} disabled={loading}>
+            {loading ? "Refreshing…" : "Refresh"}
+          </button>
+        }
+      />
 
-      <h1 style={{ fontSize: 28, margin: "0 0 8px" }}>Recordings</h1>
+      <h1 className="page-head">Recordings</h1>
       <p className="lede" style={{ fontSize: 15, marginBottom: 20 }}>
         Every{" "}
         <Link href="/broadcast" style={{ color: "var(--accent-2)" }}>

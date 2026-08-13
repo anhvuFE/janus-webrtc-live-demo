@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createSession,
@@ -10,6 +9,7 @@ import {
 import type { JanusInstance } from "@/lib/janus-types";
 import { Watermark } from "@/components/Watermark";
 import { TheaterButton } from "@/components/TheaterButton";
+import { AppHeader } from "@/components/AppHeader";
 import { viewerTag } from "@/lib/viewer";
 
 export default function WatchPage() {
@@ -64,16 +64,18 @@ export default function WatchPage() {
 
   return (
     <main className="container">
-      <div className="topbar">
-        <Link className="back" href="/">
-          ← Back
-        </Link>
-        <span className={`badge ${watching ? "live" : ""}`}>
-          {watching ? "● Watching" : "Idle"}
-        </span>
-      </div>
+      <AppHeader
+        badge={
+          <span className={`badge ${watching ? "live" : ""}`}>
+            {watching ? "● Watching" : "Idle"}
+          </span>
+        }
+      />
 
-      <h1 style={{ fontSize: 28, margin: "0 0 20px" }}>Viewer</h1>
+      <h1 className="page-head">Viewer</h1>
+      <p className="page-sub">
+        Subscribe to the active presenter&apos;s live WebRTC feed.
+      </p>
 
       <div className="video-wrap" ref={wrapRef}>
         <video ref={videoRef} autoPlay playsInline />

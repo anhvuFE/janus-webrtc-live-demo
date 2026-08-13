@@ -8,6 +8,7 @@ import { makeHlsSampler } from "@/lib/hud-samplers";
 import { StatsHud } from "@/components/StatsHud";
 import { Watermark } from "@/components/Watermark";
 import { TheaterButton } from "@/components/TheaterButton";
+import { AppHeader } from "@/components/AppHeader";
 import { viewerTag } from "@/lib/viewer";
 
 export default function HlsPage() {
@@ -83,16 +84,15 @@ export default function HlsPage() {
 
   return (
     <main className="container">
-      <div className="topbar">
-        <Link className="back" href="/">
-          ← Back
-        </Link>
-        <span className={`badge ${playing ? "live" : ""}`}>
-          {playing ? "● Playing" : "Idle"}
-        </span>
-      </div>
+      <AppHeader
+        badge={
+          <span className={`badge ${playing ? "live" : ""}`}>
+            {playing ? "● Playing" : "Idle"}
+          </span>
+        }
+      />
 
-      <h1 style={{ fontSize: 28, margin: "0 0 8px" }}>LL-HLS Player</h1>
+      <h1 className="page-head">LL-HLS Player</h1>
       <p className="lede" style={{ fontSize: 15, marginBottom: 20 }}>
         Buffered Low-Latency HLS remuxed by MediaMTX. Start{" "}
         <Link href="/broadcast" style={{ color: "var(--accent-2)" }}>

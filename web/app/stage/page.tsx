@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -13,6 +12,7 @@ import { joinStage, type RemoteFeed, type StageHandle } from "@/lib/stage-client
 import { joinChat, type ChatHandle, type ChatMessage } from "@/lib/textroom";
 import type { JanusInstance } from "@/lib/janus-types";
 import { TheaterButton } from "@/components/TheaterButton";
+import { AppHeader } from "@/components/AppHeader";
 
 type ChatLine =
   | { kind: "msg"; data: ChatMessage }
@@ -129,16 +129,15 @@ export default function StagePage() {
 
   return (
     <main className="container" style={{ maxWidth: 1120 }}>
-      <div className="topbar">
-        <Link className="back" href="/">
-          ← Back
-        </Link>
-        <span className={`badge ${joined ? "live" : ""}`}>
-          {joined ? `● On stage · ${remoteFeeds.length + 1} live` : "Lobby"}
-        </span>
-      </div>
+      <AppHeader
+        badge={
+          <span className={`badge ${joined ? "live" : ""}`}>
+            {joined ? `● On stage · ${remoteFeeds.length + 1} live` : "Lobby"}
+          </span>
+        }
+      />
 
-      <h1 style={{ fontSize: 28, margin: "0 0 8px" }}>Multi-Presenter Stage</h1>
+      <h1 className="page-head">Multi-Presenter Stage</h1>
       <p className="lede" style={{ fontSize: 15, marginBottom: 20 }}>
         Everyone publishes their own camera and subscribes to all others
         (VideoRoom multistream), with live chat over a WebRTC data channel

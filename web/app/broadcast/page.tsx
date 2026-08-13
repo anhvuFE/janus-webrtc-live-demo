@@ -7,6 +7,7 @@ import { whipPublish, type WhipSession } from "@/lib/whip";
 import { makeWebrtcOutboundSampler } from "@/lib/hud-samplers";
 import { StatsHud } from "@/components/StatsHud";
 import { Watermark } from "@/components/Watermark";
+import { AppHeader } from "@/components/AppHeader";
 
 type Source = "camera" | "screen";
 
@@ -77,16 +78,15 @@ export default function BroadcastPage() {
 
   return (
     <main className="container">
-      <div className="topbar">
-        <Link className="back" href="/">
-          ← Back
-        </Link>
-        <span className={`badge ${live ? "live" : ""}`}>
-          {live ? "● Ingesting" : "Offline"}
-        </span>
-      </div>
+      <AppHeader
+        badge={
+          <span className={`badge ${live ? "live" : ""}`}>
+            {live ? "● Ingesting" : "Offline"}
+          </span>
+        }
+      />
 
-      <h1 style={{ fontSize: 28, margin: "0 0 8px" }}>WHIP Broadcaster</h1>
+      <h1 className="page-head">WHIP Broadcaster</h1>
       <p className="lede" style={{ fontSize: 15, marginBottom: 20 }}>
         Presenter-style ingest — push your camera <em>or a screen/app window</em>{" "}
         into MediaMTX over WHIP; it remuxes to Low-Latency HLS. Watch on{" "}

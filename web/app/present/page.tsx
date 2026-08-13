@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createSession,
@@ -8,6 +7,7 @@ import {
   startPublishing,
 } from "@/lib/janus-client";
 import type { JanusInstance } from "@/lib/janus-types";
+import { AppHeader } from "@/components/AppHeader";
 
 export default function PresentPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -63,16 +63,18 @@ export default function PresentPage() {
 
   return (
     <main className="container">
-      <div className="topbar">
-        <Link className="back" href="/">
-          ← Back
-        </Link>
-        <span className={`badge ${live ? "live" : ""}`}>
-          {live ? "● Live" : "Offline"}
-        </span>
-      </div>
+      <AppHeader
+        badge={
+          <span className={`badge ${live ? "live" : ""}`}>
+            {live ? "● Live" : "Offline"}
+          </span>
+        }
+      />
 
-      <h1 style={{ fontSize: 28, margin: "0 0 20px" }}>Presenter</h1>
+      <h1 className="page-head">Presenter</h1>
+      <p className="page-sub">
+        Publish your camera to the Janus room — viewers watch on /watch.
+      </p>
 
       <div className="video-wrap">
         <video ref={videoRef} autoPlay playsInline muted />

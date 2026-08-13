@@ -1,18 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createSession,
   ensureJanus,
   startWatching,
 } from "@/lib/janus-client";
 import type { JanusInstance } from "@/lib/janus-types";
+import { Watermark } from "@/components/Watermark";
+import { TheaterButton } from "@/components/TheaterButton";
+import { viewerTag } from "@/lib/viewer";
 
 export default function WatchPage() {
+  const wrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const sessionRef = useRef<JanusInstance | null>(null);
   const stopRef = useRef<(() => void) | null>(null);
+  const tag = useMemo(() => viewerTag(), []);
 
   const [watching, setWatching] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -70,8 +75,9 @@ export default function WatchPage() {
 
       <h1 style={{ fontSize: 28, margin: "0 0 20px" }}>Viewer</h1>
 
-      <div className="video-wrap">
+      <div className="video-wrap" ref={wrapRef}>
         <video ref={videoRef} autoPlay playsInline />
+        {watching && <Watermark label={tag} />}
       </div>
 
       <div className="status">
@@ -90,6 +96,7 @@ export default function WatchPage() {
             Leave
           </button>
         )}
+        <TheaterButton targetRef={wrapRef} />
       </div>
     </main>
   );

@@ -1,41 +1,65 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MEDIAMTX_STREAM, whipEndpoint } from "@/lib/config";
 import { whipPublish, type WhipSession } from "@/lib/whip";
+import { makeWebrtcOutboundSampler } from "@/lib/hud-samplers";
+import { StatsHud } from "@/components/StatsHud";
+import { Watermark } from "@/components/Watermark";
+
+type Source = "camera" | "screen";
 
 export default function BroadcastPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sessionRef = useRef<WhipSession | null>(null);
 
+  const [source, setSource] = useState<Source>("camera");
   const [live, setLive] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Ready to ingest via WHIP");
   const [error, setError] = useState<string | null>(null);
 
+  const sampler = useMemo(
+    () => makeWebrtcOutboundSampler(() => sessionRef.current?.pc ?? null),
+    []
+  );
+
   const goLive = useCallback(async () => {
     setError(null);
     setBusy(true);
     try {
-      setStatus("Requesting camera…");
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+      setStatus(source === "screen" ? "Pick a window/screen…" : "Requesting camera…");
+      // High-quality capture: prefer 1080p60 so the HUD shows real numbers.
+      const stream =
+        source === "screen"
+          ? await navigator.mediaDevices.getDisplayMedia({
+              video: { frameRate: { ideal: 60 }, width: { ideal: 1920 } },
+              audio: true,
+            })
+          : await navigator.mediaDevices.getUserMedia({
+              video: { frameRate: { ideal: 60 }, width: { ideal: 1920 } },
+              audio: true,
+            });
       if (videoRef.current) videoRef.current.srcObject = stream;
+
+      // If the user stops sharing from the browser UI, tear down cleanly.
+      stream.getVideoTracks()[0]?.addEventListener("ended", () => void stop());
 
       setStatus(`WHIP ingest → ${whipEndpoint()}`);
       sessionRef.current = await whipPublish(whipEndpoint(), stream);
       setLive(true);
-      setStatus(`Ingesting stream "${MEDIAMTX_STREAM}" — remuxing to LL-HLS`);
+      setStatus(
+        `Ingesting "${MEDIAMTX_STREAM}" (${source}) — remuxing to LL-HLS`
+      );
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(friendlyError(e));
       setStatus("Failed to ingest");
     } finally {
       setBusy(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source]);
 
   const stop = useCallback(async () => {
     await sessionRef.current?.stop();
@@ -64,16 +88,32 @@ export default function BroadcastPage() {
 
       <h1 style={{ fontSize: 28, margin: "0 0 8px" }}>WHIP Broadcaster</h1>
       <p className="lede" style={{ fontSize: 15, marginBottom: 20 }}>
-        Pushes your camera straight into MediaMTX over WebRTC (WHIP). MediaMTX
-        remuxes it to Low-Latency HLS — open{" "}
+        Presenter-style ingest — push your camera <em>or a screen/app window</em>{" "}
+        into MediaMTX over WHIP; it remuxes to Low-Latency HLS. Watch on{" "}
         <Link href="/hls" style={{ color: "var(--accent-2)" }}>
           /hls
-        </Link>{" "}
-        to watch the buffered playback.
+        </Link>
+        .
       </p>
+
+      {!live && (
+        <div className="seg" role="tablist" aria-label="Capture source">
+          {(["camera", "screen"] as Source[]).map((s) => (
+            <button
+              key={s}
+              className={`seg-item${source === s ? " active" : ""}`}
+              onClick={() => setSource(s)}
+            >
+              {s === "camera" ? "Camera" : "Screen / App"}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="video-wrap">
         <video ref={videoRef} autoPlay playsInline muted />
+        {live && <Watermark label={`ingest · ${MEDIAMTX_STREAM}`} />}
+        {live && <StatsHud sampler={sampler} />}
       </div>
 
       <div className="status">
@@ -85,7 +125,7 @@ export default function BroadcastPage() {
       <div className="controls">
         {!live ? (
           <button className="primary" onClick={goLive} disabled={busy}>
-            {busy ? "Starting…" : "Start ingest"}
+            {busy ? "Starting…" : `Start ingest (${source})`}
           </button>
         ) : (
           <button className="danger" onClick={stop}>
@@ -95,4 +135,12 @@ export default function BroadcastPage() {
       </div>
     </main>
   );
+}
+
+function friendlyError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/failed to fetch/i.test(msg)) {
+    return `Can't reach MediaMTX at ${new URL(whipEndpoint()).host}. Is the stack running? (docker compose up)`;
+  }
+  return msg;
 }

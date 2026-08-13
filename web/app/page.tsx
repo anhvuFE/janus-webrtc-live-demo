@@ -182,24 +182,26 @@ export default function Home() {
               <Icon name="broadcast" />
               <h3>Broadcast (WHIP)</h3>
               <p>
-                Ingest your camera straight into MediaMTX over WHIP; it remuxes
-                to Low-Latency HLS.
+                Presenter-style ingest — push your camera or a screen/app window
+                into MediaMTX over WHIP; remuxed to Low-Latency HLS.
               </p>
               <div className="tags">
                 <span className="tag">WHIP</span>
-                <span className="tag">WebRTC ingest</span>
+                <span className="tag">Screen share</span>
+                <span className="tag">Live stats</span>
               </div>
             </Link>
             <Link className="card" href="/hls">
               <Icon name="play" />
               <h3>LL-HLS Player</h3>
               <p>
-                Watch the buffered, CDN-friendly Low-Latency HLS stream via
-                hls.js.
+                Watch the buffered LL-HLS stream via hls.js — with a live quality
+                HUD, forensic watermark and theater mode.
               </p>
               <div className="tags">
                 <span className="tag">LL-HLS</span>
-                <span className="tag">hls.js</span>
+                <span className="tag">Watermark</span>
+                <span className="tag">Theater</span>
               </div>
             </Link>
             <Link className="card" href="/recordings">

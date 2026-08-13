@@ -1,17 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Hls from "hls.js";
-import { hlsPlaylist } from "@/lib/config";
+import { hlsPlaylist, MEDIAMTX_STREAM } from "@/lib/config";
+import { makeHlsSampler } from "@/lib/hud-samplers";
+import { StatsHud } from "@/components/StatsHud";
+import { Watermark } from "@/components/Watermark";
+import { TheaterButton } from "@/components/TheaterButton";
+import { viewerTag } from "@/lib/viewer";
 
 export default function HlsPage() {
+  const wrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
   const [playing, setPlaying] = useState(false);
   const [status, setStatus] = useState("Ready — start the WHIP broadcaster first");
   const [error, setError] = useState<string | null>(null);
+
+  const tag = useMemo(() => viewerTag(), []);
+  const sampler = useMemo(
+    () => makeHlsSampler(() => videoRef.current, () => hlsRef.current),
+    []
+  );
 
   const play = useCallback(() => {
     setError(null);
@@ -20,7 +32,6 @@ export default function HlsPage() {
     const src = hlsPlaylist();
     setStatus(`Loading LL-HLS: ${src}`);
 
-    // Safari can play HLS natively; everyone else uses hls.js.
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = src;
       void video.play();
@@ -34,10 +45,7 @@ export default function HlsPage() {
       return;
     }
 
-    const hls = new Hls({
-      lowLatencyMode: true,
-      backBufferLength: 10,
-    });
+    const hls = new Hls({ lowLatencyMode: true, backBufferLength: 10 });
     hlsRef.current = hls;
     hls.loadSource(src);
     hls.attachMedia(video);
@@ -86,16 +94,18 @@ export default function HlsPage() {
 
       <h1 style={{ fontSize: 28, margin: "0 0 8px" }}>LL-HLS Player</h1>
       <p className="lede" style={{ fontSize: 15, marginBottom: 20 }}>
-        Plays the buffered Low-Latency HLS stream remuxed by MediaMTX. Start{" "}
+        Buffered Low-Latency HLS remuxed by MediaMTX. Start{" "}
         <Link href="/broadcast" style={{ color: "var(--accent-2)" }}>
           /broadcast
         </Link>{" "}
-        first. Expect a second or two of buffering latency vs. the raw WebRTC
-        path — that&apos;s the trade for a scalable, CDN-friendly egress.
+        first. Expect a second or two of latency vs. raw WebRTC — the trade for a
+        scalable, CDN-friendly egress.
       </p>
 
-      <div className="video-wrap">
+      <div className="video-wrap" ref={wrapRef}>
         <video ref={videoRef} controls playsInline />
+        {playing && <Watermark label={`${tag} · ${MEDIAMTX_STREAM}`} />}
+        {playing && <StatsHud sampler={sampler} />}
       </div>
 
       <div className="status">
@@ -114,6 +124,7 @@ export default function HlsPage() {
             Stop
           </button>
         )}
+        <TheaterButton targetRef={wrapRef} />
       </div>
     </main>
   );

@@ -1229,6 +1229,8 @@ button:disabled {
 }
 
 .ev-marq-track {
+  display: flex;
+  justify-content: center;
   overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
@@ -1238,20 +1240,7 @@ button:disabled {
   display: flex;
   gap: 16px;
   width: max-content;
-  animation: ev-marq 42s linear infinite;
-}
-
-.ev-marq-row.rev {
-  animation-direction: reverse;
-}
-
-@keyframes ev-marq {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
+  will-change: transform;
 }
 
 .ev-marq-app {

@@ -88,19 +88,26 @@ export default function Home() {
       </header>
 
       <div className="ev-gallery" aria-hidden>
-        {TILE_GRADIENTS.map((g, i) => (
-          <div
-            key={i}
-            className="ev-tile"
-            style={{
-              background: g,
-              transform: `rotateY(${(i - center) * -15}deg) translateZ(${
-                -Math.abs(i - center) * 26
-              }px)`,
-              zIndex: TILE_GRADIENTS.length - Math.abs(i - center),
-            }}
-          />
-        ))}
+        <div className="ev-stage">
+          {TILE_GRADIENTS.map((g, i) => {
+            const d = i - center; // <0 left, >0 right
+            return (
+              <div
+                key={i}
+                className="ev-tile"
+                style={{
+                  background: g,
+                  // Concave "wall of screens": edges rotate inward, come forward
+                  // (bigger) and rise; the centre recedes.
+                  transform: `rotateY(${-d * 26}deg) translateZ(${
+                    Math.abs(d) * 30
+                  }px) translateY(${-Math.abs(d) * 6}px)`,
+                  zIndex: Math.round(Math.abs(d)),
+                }}
+              />
+            );
+          })}
+        </div>
       </div>
 
       <section id="meet" className="ev-meet">

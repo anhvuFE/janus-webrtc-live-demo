@@ -431,6 +431,311 @@ button:disabled {
   color: transparent;
 }
 
+/* ==========================================================================
+   Evercast-style landing (light theme) — scoped to .evercast so the dark app
+   pages are untouched.
+   ========================================================================== */
+
+.evercast {
+  --ev-ink: #0b0b0f;
+  --ev-muted: #5b5b66;
+  --ev-line: #e7e7ec;
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  background: #ffffff;
+  color: var(--ev-ink);
+  overflow: hidden;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+}
+
+.evercast a {
+  color: inherit;
+}
+
+/* Nav */
+.ev-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 22px 24px;
+}
+
+.ev-logo {
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+.ev-logo small {
+  font-weight: 500;
+  font-size: 12px;
+  color: #9a9aa2;
+}
+
+.ev-navlinks {
+  display: flex;
+  gap: 28px;
+  font-size: 14px;
+  color: #3a3a44;
+}
+
+.ev-navlinks a:hover {
+  color: #000;
+}
+
+.ev-navactions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ev-link {
+  font-size: 14px;
+  color: #3a3a44;
+}
+
+.ev-btn {
+  background: #111318;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.ev-btn:hover {
+  transform: translateY(-1px);
+  background: #000;
+}
+
+.ev-btn.ghost {
+  background: transparent;
+  color: #111318;
+  border: 1px solid #d9d9de;
+}
+
+.ev-btn.ghost:hover {
+  background: #f5f5f7;
+}
+
+@media (max-width: 720px) {
+  .ev-navlinks {
+    display: none;
+  }
+}
+
+/* Hero */
+.ev-hero {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 64px 24px 26px;
+  text-align: center;
+}
+
+.ev-avail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9a9aa2;
+  margin-bottom: 22px;
+}
+
+.ev-pill {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #3a3a44;
+  background: #f2f2f4;
+  border: 1px solid var(--ev-line);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.ev-h1 {
+  font-size: clamp(40px, 6.6vw, 78px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  margin: 0;
+}
+
+.ev-sub {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--ev-muted);
+  max-width: 600px;
+  margin: 22px auto 0;
+}
+
+.ev-cta-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+/* 3D perspective media gallery */
+.ev-gallery {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1600px;
+  transform-style: preserve-3d;
+  padding: 30px 0 56px;
+  overflow: hidden;
+}
+
+.ev-tile {
+  flex: none;
+  width: clamp(96px, 11vw, 150px);
+  height: clamp(134px, 15.4vw, 210px);
+  margin: 0 -8px;
+  border-radius: 14px;
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.22);
+  outline: 3px solid rgba(255, 255, 255, 0.7);
+  outline-offset: -3px;
+}
+
+/* Meet section */
+.ev-meet {
+  max-width: 760px;
+  margin: 56px auto 0;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.ev-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9a9aa2;
+}
+
+.ev-h2 {
+  font-size: clamp(30px, 4.6vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 12px 0 0;
+}
+
+/* Product cards with mock screenshots */
+.ev-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  max-width: 1080px;
+  margin: 44px auto 0;
+  padding: 0 24px;
+}
+
+.ev-card {
+  border: 1px solid var(--ev-line);
+  border-radius: 18px;
+  padding: 16px;
+  background: #fff;
+}
+
+.ev-shot {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.ev-shot-bar {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+}
+
+.ev-shot-bar span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.ev-card h3 {
+  margin: 0 4px 6px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ev-card p {
+  margin: 0 4px 8px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ev-muted);
+}
+
+/* Big stats band */
+.ev-stats {
+  display: flex;
+  justify-content: center;
+  gap: clamp(32px, 8vw, 120px);
+  padding: 64px 24px;
+  margin-top: 20px;
+  border-top: 1px solid var(--ev-line);
+  border-bottom: 1px solid var(--ev-line);
+}
+
+.ev-stat {
+  text-align: center;
+}
+
+.ev-stat b {
+  display: block;
+  font-size: clamp(42px, 6.5vw, 66px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.ev-stat span {
+  font-size: 14px;
+  color: var(--ev-muted);
+}
+
+/* Final CTA + footer */
+.ev-final {
+  text-align: center;
+  padding: 72px 24px;
+}
+
+.ev-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+  border-top: 1px solid var(--ev-line);
+  color: var(--ev-muted);
+  font-size: 13px;
+}
+
+.ev-footer-links {
+  display: flex;
+  gap: 18px;
+}
+
+.ev-footer-links a:hover {
+  color: #000;
+}
+
 /* ---------- App/player pages ---------- */
 
 .topbar {

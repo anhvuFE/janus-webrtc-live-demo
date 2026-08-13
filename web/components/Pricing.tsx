@@ -3,20 +3,31 @@
 import Link from "next/link";
 import { useState } from "react";
 
-// Pricing block with a Monthly/Yearly toggle, mirroring the reference layout.
+const AVATARS = ["/avatars/12.jpg", "/avatars/32.jpg", "/avatars/45.jpg", "/avatars/5.jpg"];
+
+const ENTERPRISE_FEATURES = [
+  "Single sign-on",
+  "Forensic watermarking",
+  "DRM support",
+  "Custom integrations",
+  "PO billing",
+  "Multi-region relays",
+];
+
+function Check() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden>
+      <circle cx="10" cy="10" r="9" stroke="#111318" strokeWidth="1.4" />
+      <path d="M6 10.2l2.6 2.6L14 7.4" stroke="#111318" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function Pricing() {
   const [yearly, setYearly] = useState(true);
-  const teamPrice = yearly ? 29 : 39;
 
   return (
-    <section id="pricing" className="ev-band">
-      <span className="ev-eyebrow">Plans &amp; pricing</span>
-      <h2 className="ev-h2">For teams of all sizes</h2>
-      <p className="ev-sub">
-        Run the whole stack yourself for free, or let us host it at scale with
-        multi-region relays and studio-grade security.
-      </p>
-
+    <section id="pricing" className="ev-band" style={{ maxWidth: 1040 }}>
       <div className="ev-toggle" role="tablist" aria-label="Billing period">
         <button
           className={`ev-toggle-item${!yearly ? " active" : ""}`}
@@ -33,66 +44,57 @@ export function Pricing() {
       </div>
 
       <div className="ev-pricing">
+        {/* Starter */}
         <div className="ev-price-card">
-          <div className="ev-price-name">Self-host</div>
+          <div className="ev-plan-name">Starter Plan</div>
           <p className="ev-price-tagline">
-            For builders who want the full stack, open source.
+            For individuals and small teams looking to stream with quality,
+            clarity and consistency.
           </p>
           <div className="ev-price">
-            $0<span>/forever</span>
+            ${yearly ? 39 : 49}
+            {yearly && <span className="ev-save">Save 20%</span>}
           </div>
-          <Link href="https://github.com/anhvuFE/janus-webrtc-live-demo">
-            <button className="ev-btn" style={{ width: "100%" }}>
-              Clone the repo
-            </button>
+          <div className="ev-price-note">
+            per user per month{yearly ? ", billed yearly" : ""}
+          </div>
+          <div className="ev-rating">
+            <div className="ev-avatars">
+              {AVATARS.map((a) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={a} src={a} alt="" className="ev-avatar" />
+              ))}
+            </div>
+            <span className="ev-stars">★★★★★</span>
+            <span className="ev-rating-num">4.9/5</span>
+          </div>
+          <Link href="/present">
+            <button className="ev-btn ev-btn-block">Try it for free →</button>
           </Link>
-          <ul className="ev-price-list">
-            <li>Janus + MediaMTX + coturn via Docker</li>
-            <li>Every feature in this demo</li>
-            <li>Self-signed DTLS, single region</li>
-            <li>Community support</li>
-          </ul>
         </div>
 
-        <div className="ev-price-card featured">
-          <div className="ev-price-name">
-            Team <span className="ev-price-badge">Popular</span>
-          </div>
-          <p className="ev-price-tagline">Managed streaming with room to grow.</p>
-          <div className="ev-price">
-            ${teamPrice}
-            <span>/user · {yearly ? "yr billed" : "mo"}</span>
-          </div>
-          <Link href="#">
-            <button className="ev-btn" style={{ width: "100%" }}>
-              Start free trial
-            </button>
-          </Link>
-          <ul className="ev-price-list">
-            <li>Everything in Self-host</li>
-            <li>Multi-region forwarding &amp; TURN</li>
-            <li>DRM + forensic watermarking</li>
-            <li>SSO, admin portal, priority support</li>
-          </ul>
-        </div>
-
+        {/* Enterprise */}
         <div className="ev-price-card">
-          <div className="ev-price-name">Enterprise</div>
+          <div className="ev-plan-name">Enterprise Plan</div>
           <p className="ev-price-tagline">
-            For studios with custom scale and compliance.
+            For organizations looking to scale streaming with custom features
+            and services.
           </p>
           <div className="ev-price ev-price-custom">Custom</div>
+          <div className="ev-price-note">
+            pricing based on seats, usage and feature selection
+          </div>
+          <div className="ev-feat-grid">
+            {ENTERPRISE_FEATURES.map((f) => (
+              <div className="ev-feat" key={f}>
+                <Check />
+                <span>{f}</span>
+              </div>
+            ))}
+          </div>
           <Link href="#">
-            <button className="ev-btn ghost" style={{ width: "100%" }}>
-              Let&apos;s talk
-            </button>
+            <button className="ev-btn ev-btn-block">Let&apos;s talk →</button>
           </Link>
-          <ul className="ev-price-list">
-            <li>On-prem / private cloud deployment</li>
-            <li>Custom integrations &amp; SLAs</li>
-            <li>Dedicated multi-region capacity</li>
-            <li>PO billing &amp; security review</li>
-          </ul>
         </div>
       </div>
     </section>

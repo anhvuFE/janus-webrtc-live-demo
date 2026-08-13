@@ -584,48 +584,33 @@ button:disabled {
   margin-top: 30px;
 }
 
-/* 3D perspective media gallery — concave "wall of screens" */
+/* Scroll-linked cylindrical media wall */
 .ev-gallery {
-  padding: 34px 0 46px;
-  overflow: hidden; /* let the arc bleed off both edges */
-  perspective: 1200px;
-  perspective-origin: center 40%;
+  padding: 30px 0 44px;
+  overflow: hidden; /* let the curve bleed off both edges */
+  perspective: 1150px;
+  perspective-origin: center center;
 }
 
-.ev-stage {
+.ev-strip {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: clamp(14px, 1.8vw, 26px);
   transform-style: preserve-3d;
-  animation: ev-sway 16s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 .ev-tile {
   flex: none;
-  width: clamp(120px, 13vw, 184px);
-  height: clamp(174px, 18.8vw, 266px);
-  margin: 0 -16px;
+  width: clamp(168px, 18vw, 258px);
+  aspect-ratio: 6 / 5;
   border-radius: 16px;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
   outline: 4px solid rgba(255, 255, 255, 0.85);
   outline-offset: -4px;
-  transition: transform 0.3s ease;
-}
-
-/* Gentle parallax sway so the 3D depth reads as motion. */
-@keyframes ev-sway {
-  from {
-    transform: rotateY(-7deg) rotateX(2deg);
-  }
-  to {
-    transform: rotateY(7deg) rotateX(2deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ev-stage {
-    animation: none;
-  }
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 /* Meet section */

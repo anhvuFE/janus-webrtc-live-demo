@@ -2,21 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
-// Colourful stand-in "media stills" for the curved wall.
-const TILES = [
-  "linear-gradient(150deg,#f59e0b,#7c2d12)",
-  "linear-gradient(150deg,#ef4444,#7f1d1d)",
-  "linear-gradient(150deg,#c7c9cc,#4b5563)",
-  "linear-gradient(150deg,#f97316,#78350f)",
-  "linear-gradient(150deg,#10b981,#064e3b)",
-  "linear-gradient(150deg,#0ea5e9,#0c4a6e)",
-  "linear-gradient(150deg,#a855f7,#3b0764)",
-  "linear-gradient(150deg,#f43f5e,#831843)",
-  "linear-gradient(150deg,#eab308,#713f12)",
-  "linear-gradient(150deg,#06b6d4,#164e63)",
-  "linear-gradient(150deg,#6366f1,#312e81)",
-  "linear-gradient(150deg,#84cc16,#365314)",
-];
+// Real photographic stills (vendored in /public/wall) for the curved wall.
+const TILES = Array.from({ length: 12 }, (_, i) => `/wall/${i + 1}.jpg`);
 
 const MAX_ANGLE = 58; // degrees at the far edges
 const DEPTH = 190; // px the edges recede
@@ -80,14 +67,14 @@ export function MediaWall() {
   return (
     <div className="ev-gallery" ref={wrapRef} aria-hidden>
       <div className="ev-strip" ref={stripRef}>
-        {TILES.map((g, i) => (
+        {TILES.map((src, i) => (
           <div
             key={i}
             ref={(el) => {
               tilesRef.current[i] = el;
             }}
             className="ev-tile"
-            style={{ background: g }}
+            style={{ backgroundImage: `url(${src})` }}
           />
         ))}
       </div>

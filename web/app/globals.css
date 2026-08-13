@@ -606,6 +606,9 @@ button:disabled {
   width: clamp(168px, 18vw, 258px);
   aspect-ratio: 6 / 5;
   border-radius: 16px;
+  background-color: #e5e5ea;
+  background-size: cover;
+  background-position: center;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
   outline: 4px solid rgba(255, 255, 255, 0.85);
   outline-offset: -4px;

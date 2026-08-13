@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MediaWall } from "@/components/MediaWall";
+import { Pricing } from "@/components/Pricing";
 
 const SHOTS = [
   {
@@ -19,6 +20,47 @@ const SHOTS = [
   },
 ];
 
+const SOURCES = [
+  "Camera",
+  "Screen",
+  "OBS",
+  "Premiere",
+  "Resolve",
+  "After Effects",
+  "Chrome",
+  "Keynote",
+  "Figma",
+  "Unreal",
+  "vMix",
+  "Any WHIP",
+];
+
+const USE_CASES = [
+  { g: "linear-gradient(135deg,#f59e0b,#7c2d12)", t: "Live events", d: "Broadcast keynotes to many viewers." },
+  { g: "linear-gradient(135deg,#0ea5e9,#0c4a6e)", t: "Client reviews", d: "Frame-accurate remote approvals." },
+  { g: "linear-gradient(135deg,#a855f7,#3b0764)", t: "Town halls", d: "All-hands with low latency at scale." },
+  { g: "linear-gradient(135deg,#10b981,#064e3b)", t: "Creative sessions", d: "Shoulder-to-shoulder editing remotely." },
+  { g: "linear-gradient(135deg,#f43f5e,#831843)", t: "Product demos", d: "Show a screen/app in crisp quality." },
+  { g: "linear-gradient(135deg,#6366f1,#312e81)", t: "Remote teaching", d: "Lectures with chat and recording." },
+  { g: "linear-gradient(135deg,#eab308,#713f12)", t: "Watch parties", d: "Synced playback with reactions." },
+  { g: "linear-gradient(135deg,#06b6d4,#164e63)", t: "Live sports", d: "Multi-cam feeds, minimal delay." },
+];
+
+const STEPS = [
+  { n: "01", t: "Bring up the stack", d: "docker compose up starts Janus, coturn and MediaMTX." },
+  { n: "02", t: "Open a room", d: "Head to /present or /stage and allow your camera." },
+  { n: "03", t: "Go live", d: "Viewers watch on /watch or the buffered /hls path." },
+];
+
+const FAQS = [
+  { q: "How low is the latency?", a: "The WebRTC path is sub-second glass-to-glass; the buffered LL-HLS path adds a second or two for CDN-friendly scale." },
+  { q: "Can I share a screen or app window?", a: "Yes — the WHIP broadcaster can ingest a camera or any screen/application window via getDisplayMedia." },
+  { q: "Does it record?", a: "MediaMTX archives every broadcast to fragmented MP4 server-side; browse and review them at /recordings." },
+  { q: "Is the media secured?", a: "The demo ships a forensic watermark overlay; a managed deployment adds DRM (Widevine/FairPlay) and encrypted delivery." },
+  { q: "How many presenters at once?", a: "The multi-presenter stage uses Janus VideoRoom multistream — everyone publishes and subscribes to all others." },
+  { q: "What does it run on?", a: "Everything is Dockerised and works on Intel and Apple Silicon; the client is Next.js + TypeScript." },
+];
+
 export default function Home() {
   return (
     <div className="evercast">
@@ -28,14 +70,8 @@ export default function Home() {
         </div>
         <div className="ev-navlinks">
           <a href="#meet">Product</a>
-          <a href="#stats">Performance</a>
-          <a
-            href="https://github.com/anhvuFE/janus-webrtc-live-demo"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Source
-          </a>
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
         </div>
         <div className="ev-navactions">
           <Link href="/watch" className="ev-link">
@@ -65,17 +101,17 @@ export default function Home() {
         </p>
         <div className="ev-cta-row">
           <Link href="/present">
-            <button className="ev-btn">Get started for free</button>
+            <button className="ev-btn">Get started for free →</button>
           </Link>
           <Link href="/hls">
-            <button className="ev-btn ghost">Watch demo</button>
+            <button className="ev-btn ghost">Watch demo →</button>
           </Link>
         </div>
       </header>
 
       <MediaWall />
 
-      <section id="meet" className="ev-meet">
+      <section id="meet" className="ev-band">
         <span className="ev-eyebrow">Meet Janus Live</span>
         <h2 className="ev-h2">Your work deserves better than screenshare</h2>
         <p className="ev-sub">
@@ -111,25 +147,87 @@ export default function Home() {
           <span>frames per second</span>
         </div>
         <div className="ev-stat">
-          <b>&lt;1s</b>
-          <span>glass-to-glass latency</span>
+          <b>&lt;100ms</b>
+          <span>average global latency</span>
         </div>
       </section>
 
-      <section className="ev-final">
+      <section className="ev-band">
+        <span className="ev-eyebrow">Share media without lag or compression</span>
         <h2 className="ev-h2">Focus on the content, not the playback quality</h2>
-        <div className="ev-cta-row">
-          <Link href="/broadcast">
-            <button className="ev-btn">Try it now</button>
-          </Link>
-          <Link href="/stage">
-            <button className="ev-btn ghost">Open a stage</button>
-          </Link>
+        <p className="ev-sub">
+          Stream any source — a camera, a screen, or any of 100+ apps — with
+          adaptive bitrate and enterprise-grade delivery.
+        </p>
+        <div className="ev-apps">
+          {SOURCES.map((s) => (
+            <span className="ev-app" key={s}>
+              {s}
+            </span>
+          ))}
         </div>
+      </section>
+
+      <section className="ev-band">
+        <span className="ev-eyebrow">For moments that matter</span>
+        <h2 className="ev-h2">Showcase your best work</h2>
+      </section>
+      <section className="ev-usecases">
+        {USE_CASES.map((u) => (
+          <div className="ev-uc" key={u.t}>
+            <div className="ev-uc-img" style={{ background: u.g }} />
+            <strong>{u.t}</strong>
+            <span>{u.d}</span>
+          </div>
+        ))}
+      </section>
+
+      <Pricing />
+
+      <section className="ev-band">
+        <span className="ev-eyebrow">One stack, three steps</span>
+        <h2 className="ev-h2">Supercharge your streaming</h2>
+      </section>
+      <section className="ev-steps">
+        {STEPS.map((s) => (
+          <div className="ev-step" key={s.n}>
+            <span className="ev-step-n">{s.n}</span>
+            <strong>{s.t}</strong>
+            <span>{s.d}</span>
+          </div>
+        ))}
+      </section>
+
+      <section id="faq" className="ev-band">
+        <span className="ev-eyebrow">FAQs</span>
+        <h2 className="ev-h2">Have questions?</h2>
+      </section>
+      <section className="ev-faq">
+        {FAQS.map((f) => (
+          <details className="ev-faq-item" key={f.q}>
+            <summary>
+              {f.q}
+              <span className="ev-faq-mark" />
+            </summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </section>
+
+      <section className="ev-dark">
+        <div className="ev-dark-mark">JW</div>
+        <h2>Looking for full production-grade streaming?</h2>
+        <p>
+          The same architecture scales to multi-region relays, DRM and 10-bit
+          colour. Explore the source and take it all the way.
+        </p>
+        <Link href="https://github.com/anhvuFE/janus-webrtc-live-demo">
+          <button className="ev-btn light">Discover the stack →</button>
+        </Link>
       </section>
 
       <footer className="ev-footer">
-        <span>Janus WebRTC Live Demo · Next.js + TypeScript</span>
+        <span>Janus WebRTC Live Demo · Next.js + TypeScript · © 2026 anhvuFE</span>
         <div className="ev-footer-links">
           <a href="https://janus.conf.meetecho.com/" target="_blank" rel="noreferrer">
             Janus

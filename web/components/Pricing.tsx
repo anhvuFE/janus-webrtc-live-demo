@@ -68,7 +68,7 @@ export function Pricing() {
             <span className="ev-stars">★★★★★</span>
             <span className="ev-rating-num">4.9/5</span>
           </div>
-          <Link href="/present">
+          <Link href="/present" className="ev-cta-link">
             <button className="ev-btn ev-btn-block">Try it for free →</button>
           </Link>
         </div>

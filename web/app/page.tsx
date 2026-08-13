@@ -102,9 +102,10 @@ export default function Home() {
               <span className="ev-call-title">{c.title}</span>
             </div>
             <div className="ev-call-strip">
-              <span style={{ background: "#3f4a63" }} />
-              <span style={{ background: "#5b4a63" }} />
-              <span style={{ background: "#4a6355" }} />
+              {["/avatars/8.jpg", "/avatars/15.jpg", "/avatars/25.jpg"].map((a) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={a} src={a} alt="" />
+              ))}
             </div>
             <div
               className="ev-call-stage"

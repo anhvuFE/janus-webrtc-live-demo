@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { RecordingEntry } from "@/lib/recordings";
+import { NotesPanel } from "@/components/NotesPanel";
+import { TheaterButton } from "@/components/TheaterButton";
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -11,6 +13,8 @@ function humanSize(bytes: number): string {
 }
 
 export default function RecordingsPage() {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [items, setItems] = useState<RecordingEntry[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,14 +65,23 @@ export default function RecordingsPage() {
       {error && <div className="error">{error}</div>}
 
       {selected && (
-        <div className="video-wrap" style={{ marginBottom: 20 }}>
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <video
-            key={selected}
-            controls
-            playsInline
-            src={`/api/recordings/file?id=${encodeURIComponent(selected)}`}
-          />
+        <div className="review-layout" style={{ marginBottom: 20 }}>
+          <div>
+            <div className="video-wrap" ref={wrapRef}>
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <video
+                key={selected}
+                ref={videoRef}
+                controls
+                playsInline
+                src={`/api/recordings/file?id=${encodeURIComponent(selected)}`}
+              />
+            </div>
+            <div className="controls">
+              <TheaterButton targetRef={wrapRef} />
+            </div>
+          </div>
+          <NotesPanel videoRef={videoRef} storageKey={selected} />
         </div>
       )}
 

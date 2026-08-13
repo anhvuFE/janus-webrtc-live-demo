@@ -8,6 +8,8 @@ import { iceServers } from "./config";
 
 export interface WhipSession {
   stop: () => Promise<void>;
+  /** The live peer connection, for reading getStats() in the Quality HUD. */
+  pc: RTCPeerConnection;
 }
 
 /** Wait until ICE gathering finishes (WHIP is non-trickle by default). */
@@ -70,6 +72,7 @@ export async function whipPublish(
   const resourceUrl = location ? new URL(location, endpoint).toString() : null;
 
   return {
+    pc,
     stop: async () => {
       try {
         if (resourceUrl) await fetch(resourceUrl, { method: "DELETE" });

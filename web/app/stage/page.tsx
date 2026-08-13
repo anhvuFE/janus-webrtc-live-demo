@@ -12,6 +12,7 @@ import { createSession, ensureJanus } from "@/lib/janus-client";
 import { joinStage, type RemoteFeed, type StageHandle } from "@/lib/stage-client";
 import { joinChat, type ChatHandle, type ChatMessage } from "@/lib/textroom";
 import type { JanusInstance } from "@/lib/janus-types";
+import { TheaterButton } from "@/components/TheaterButton";
 
 type ChatLine =
   | { kind: "msg"; data: ChatMessage }
@@ -31,6 +32,7 @@ function RemoteTile({ feed }: { feed: RemoteFeed }) {
 }
 
 export default function StagePage() {
+  const gridRef = useRef<HTMLDivElement>(null);
   const localRef = useRef<HTMLVideoElement>(null);
   const sessionRef = useRef<JanusInstance | null>(null);
   const stageRef = useRef<StageHandle | null>(null);
@@ -164,7 +166,7 @@ export default function StagePage() {
       </div>
 
       <div className="stage-layout">
-        <div className="grid">
+        <div className="grid" ref={gridRef}>
           <div className="tile">
             <video ref={localRef} autoPlay playsInline muted />
             <span className="tile-label">You{name ? ` · ${name}` : ""}</span>
@@ -218,6 +220,7 @@ export default function StagePage() {
           <button className="danger" onClick={leave}>
             Leave stage
           </button>
+          <TheaterButton targetRef={gridRef} />
         </div>
       )}
     </main>

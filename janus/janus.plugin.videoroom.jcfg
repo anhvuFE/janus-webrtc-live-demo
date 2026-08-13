@@ -1,0 +1,19 @@
+// VideoRoom plugin config (demo)
+// A single pre-created room the presenter publishes into and viewers subscribe to.
+// Docs: https://janus.conf.meetecho.com/docs/videoroom.html
+
+general: {
+	//admin_key = "supersecret"   // set to require a key when creating rooms via API
+}
+
+// Room 1234 — the demo "live stage".
+room-1234: {
+	description = "Janus WebRTC Live Demo — Stage"
+	is_private = false
+	publishers = 3           // how many can publish at once (presenter side)
+	bitrate = 1500000        // 1.5 Mbps cap per publisher
+	fir_freq = 10            // ask publishers for a keyframe every 10s
+	audiocodec = "opus"
+	videocodec = "vp8,h264,vp9"   // client negotiates the first it supports
+	// pin = "presenterpin"        // uncomment to require a PIN to publish
+}

@@ -1,0 +1,26 @@
+// HTTP transport config (demo)
+// Handy for quick REST poking / health checks (http://localhost:8088/janus/info).
+
+general: {
+	json = "indented"
+	base_path = "/janus"
+	http = true
+	port = 8088
+	// No `interface` set → bind on all interfaces. (This option takes an
+	// interface *name* like "eth0", not an IP, so "0.0.0.0" would fail to bind.)
+	https = false
+}
+
+admin: {
+	admin_base_path = "/admin"
+	admin_http = false
+	admin_https = false
+}
+
+cors: {
+	// Demo: allow the Next.js dev origin. Loosen/adjust as needed.
+	//allow_origin = "http://localhost:3000"
+}
+
+certificates: {
+}

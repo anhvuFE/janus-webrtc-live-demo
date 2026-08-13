@@ -1,0 +1,96 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  createSession,
+  ensureJanus,
+  startWatching,
+} from "@/lib/janus-client";
+import type { JanusInstance } from "@/lib/janus-types";
+
+export default function WatchPage() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const sessionRef = useRef<JanusInstance | null>(null);
+  const stopRef = useRef<(() => void) | null>(null);
+
+  const [watching, setWatching] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("Ready to watch");
+  const [error, setError] = useState<string | null>(null);
+
+  const join = useCallback(async () => {
+    setError(null);
+    setBusy(true);
+    setStatus("Connecting to Janus…");
+    try {
+      await ensureJanus();
+      const session = await createSession();
+      sessionRef.current = session;
+
+      stopRef.current = await startWatching(session, {
+        onRemoteStream: (stream) => {
+          if (videoRef.current) videoRef.current.srcObject = stream;
+        },
+        onStatus: setStatus,
+        onError: setError,
+        onWaiting: () => setStatus("Waiting for a presenter to go live…"),
+      });
+      setWatching(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setStatus("Failed to join");
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  const leave = useCallback(() => {
+    stopRef.current?.();
+    stopRef.current = null;
+    sessionRef.current?.destroy();
+    sessionRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setWatching(false);
+    setStatus("Left the stream");
+  }, []);
+
+  useEffect(() => () => leave(), [leave]);
+
+  return (
+    <main className="container">
+      <div className="topbar">
+        <Link className="back" href="/">
+          ← Back
+        </Link>
+        <span className={`badge ${watching ? "live" : ""}`}>
+          {watching ? "● Watching" : "Idle"}
+        </span>
+      </div>
+
+      <h1 style={{ fontSize: 28, margin: "0 0 20px" }}>Viewer</h1>
+
+      <div className="video-wrap">
+        <video ref={videoRef} autoPlay playsInline />
+      </div>
+
+      <div className="status">
+        <span>{status}</span>
+      </div>
+
+      {error && <div className="error">{error}</div>}
+
+      <div className="controls">
+        {!watching ? (
+          <button className="primary" onClick={join} disabled={busy}>
+            {busy ? "Joining…" : "Watch live"}
+          </button>
+        ) : (
+          <button className="danger" onClick={leave}>
+            Leave
+          </button>
+        )}
+      </div>
+    </main>
+  );
+}

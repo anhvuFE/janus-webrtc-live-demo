@@ -1,0 +1,65 @@
+// Janus main configuration (demo)
+// Docs: https://janus.conf.meetecho.com/docs/JANUS.html
+//
+// The Dockerfile creates a stable symlink /usr/lib/janus -> the arch-specific
+// package dir, so the folder paths below work on both amd64 and arm64 (M1).
+
+general: {
+	configs_folder = "/etc/janus"
+	plugins_folder = "/usr/lib/janus/plugins"
+	transports_folder = "/usr/lib/janus/transports"
+	events_folder = "/usr/lib/janus/events"
+	loggers_folder = "/usr/lib/janus/loggers"
+
+	debug_level = 4
+	admin_secret = "janusoverlord"   // demo only — change for anything real
+	server_name = "JanusDemo"
+}
+
+certificates: {
+	// No DTLS certs provided: Janus auto-generates a self-signed one on boot.
+}
+
+media: {
+	// Keep the RTP/RTCP UDP port range small so we can publish it from Docker.
+	// Must match the range exposed in docker-compose.yml.
+	rtp_port_range = "10000-10200"
+	dtls_mtu = 1200
+}
+
+nat: {
+	stun_server = "stun.l.google.com"
+	stun_port = 19302
+	nice_debug = false
+
+	// For LOCAL single-machine testing (browser + Janus on the same host)
+	// we advertise 127.0.0.1 so ICE picks the loopback candidate.
+	// For LAN / real deployments, set this to the host's reachable IP
+	// (or remove it and rely on STUN/TURN). See README.
+	nat_1_1_mapping = "127.0.0.1"
+
+	// coturn (see coturn/turnserver.conf). Uncomment for real NAT traversal.
+	// turn_server = "127.0.0.1"
+	// turn_port = 3478
+	// turn_type = "udp"
+	// turn_user = "januswebrtc"
+	// turn_pwd = "demo-turn-secret"
+}
+
+plugins: {
+	// Only the VideoRoom plugin is needed for this demo; disabling the rest
+	// keeps startup clean. Comment these out to enable everything.
+	disable = "libjanus_audiobridge.so,libjanus_streaming.so,libjanus_sip.so,libjanus_nosip.so,libjanus_textroom.so,libjanus_voicemail.so,libjanus_recordplay.so,libjanus_echotest.so,libjanus_videocall.so,libjanus_lua.so,libjanus_duktape.so"
+}
+
+transports: {
+	// Only WebSocket + HTTP transports are used by the client.
+	disable = "libjanus_pfunix.so,libjanus_mqtt.so,libjanus_rabbitmq.so,libjanus_nanomsg.so"
+}
+
+loggers: {
+}
+
+events: {
+	broadcast = false
+}

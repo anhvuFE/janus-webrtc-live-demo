@@ -1,0 +1,35 @@
+# Janus WebRTC Live Demo — infrastructure
+#
+# Brings up:
+#   - janus   : media server (VideoRoom plugin) — WS on 8188, HTTP on 8088
+#   - coturn  : STUN/TURN for NAT traversal (optional for local testing)
+#
+# The Next.js client runs on the host (see web/) and talks to ws://localhost:8188.
+#
+# NOTE on macOS/Docker Desktop: UDP media over published ports works for
+# single-machine testing (browser + Janus both see 127.0.0.1). For LAN or
+# production-like testing, run on Linux with `network_mode: host`. See README.
+
+services:
+  janus:
+    build: ./janus
+    container_name: janus-demo
+    restart: unless-stopped
+    ports:
+      - "8088:8088"           # HTTP API
+      - "8188:8188"           # WebSocket API (client connects here)
+      - "10000-10200:10000-10200/udp"   # RTP/RTCP media
+    # For Linux + best media performance, comment out `ports` above and use:
+    # network_mode: host
+
+  coturn:
+    image: coturn/coturn:4.6-alpine
+    container_name: coturn-demo
+    restart: unless-stopped
+    volumes:
+      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    command: ["-c", "/etc/coturn/turnserver.conf"]
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "49160-49200:49160-49200/udp"   # TURN relay range

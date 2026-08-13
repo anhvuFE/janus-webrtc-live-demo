@@ -1,0 +1,18 @@
+// WebSocket transport config (demo)
+// This is the transport the Next.js client connects to (ws://localhost:8188).
+
+general: {
+	json = "indented"
+	ws = true
+	ws_port = 8188
+	ws_interface = "0.0.0.0"
+	wss = false            // TLS handled outside the container in real setups
+}
+
+admin: {
+	admin_ws = false
+	admin_wss = false
+}
+
+certificates: {
+}

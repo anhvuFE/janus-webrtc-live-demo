@@ -44,6 +44,11 @@ export async function joinStage(
   let pubHandle: JanusPluginHandle = null;
   let subHandle: JanusPluginHandle = null;
   let privateId: number | undefined;
+  // Feeds we've already subscribed to (dedup) + a guard/queue for the async
+  // attach so two publishers arriving at once don't spawn two subscriber handles.
+  const subscribed = new Set<number>();
+  let subAttaching = false;
+  let pending: Publisher[] = [];
 
   function ensureFeed(id: number, display?: string): RemoteFeed {
     let feed = feeds.get(id);
@@ -62,6 +67,7 @@ export async function joinStage(
     feed.stream.getTracks().forEach((t) => t.stop());
     for (const [mid, fid] of midToFeed) if (fid === id) midToFeed.delete(mid);
     feeds.delete(id);
+    subscribed.delete(id); // allow re-subscribe if this feed republishes
     cb.onFeedLeft?.(id);
   }
 
@@ -77,31 +83,59 @@ export async function joinStage(
     }
   }
 
-  function subscribeTo(publishers: Publisher[]) {
-    const fresh = publishers.filter((p) => {
-      ensureFeed(p.id, p.display);
-      return true;
+  function doSubscribe(list: Publisher[]) {
+    list.forEach((p) => subscribed.add(p.id));
+    subHandle.send({
+      message: {
+        request: "subscribe",
+        streams: list.map((p) => ({ feed: p.id })),
+      },
     });
-    if (fresh.length === 0) return;
-    const streams = fresh.map((p) => ({ feed: p.id }));
+  }
 
-    if (!subHandle) {
-      session.attach({
-        plugin: VIDEOROOM,
-        opaqueId: `stage-sub-${Date.now()}`,
-        success: (h: JanusPluginHandle) => {
-          subHandle = h;
-          h.send({
-            message: {
-              request: "join",
-              room: JANUS_ROOM,
-              ptype: "subscriber",
-              private_id: privateId,
-              streams,
-            },
-          });
-        },
-        error: (err: unknown) => cb.onError?.(String(err)),
+  function subscribeTo(publishers: Publisher[]) {
+    publishers.forEach((p) => ensureFeed(p.id, p.display));
+    // Only feeds we haven't already subscribed to (or queued for subscribe).
+    const toAdd = publishers.filter(
+      (p) => !subscribed.has(p.id) && !pending.some((q) => q.id === p.id)
+    );
+    if (toAdd.length === 0) return;
+
+    if (subHandle) {
+      doSubscribe(toAdd);
+      return;
+    }
+    if (subAttaching) {
+      pending.push(...toAdd);
+      return;
+    }
+
+    // First subscriber: attach once and join with the initial feeds.
+    subAttaching = true;
+    toAdd.forEach((p) => subscribed.add(p.id));
+    const streams = toAdd.map((p) => ({ feed: p.id }));
+    session.attach({
+      plugin: VIDEOROOM,
+      opaqueId: `stage-sub-${Date.now()}`,
+      success: (h: JanusPluginHandle) => {
+        subHandle = h;
+        subAttaching = false;
+        h.send({
+          message: {
+            request: "join",
+            room: JANUS_ROOM,
+            ptype: "subscriber",
+            private_id: privateId,
+            streams,
+          },
+        });
+        if (pending.length) {
+          const queued = pending;
+          pending = [];
+          doSubscribe(queued);
+        }
+      },
+      error: (err: unknown) => cb.onError?.(String(err)),
         onmessage: (msg: Record<string, unknown>, jsep?: unknown) => {
           const streamsInfo = msg["streams"] as
             | Array<Record<string, unknown>>
@@ -136,10 +170,6 @@ export async function joinStage(
           }
         },
       });
-    } else {
-      // Already subscribed to someone — just add the new feeds.
-      subHandle.send({ message: { request: "subscribe", streams } });
-    }
   }
 
   return new Promise((resolve, reject) => {

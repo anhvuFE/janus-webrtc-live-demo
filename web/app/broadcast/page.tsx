@@ -45,7 +45,10 @@ export default function BroadcastPage() {
       if (videoRef.current) videoRef.current.srcObject = stream;
 
       // If the user stops sharing from the browser UI, tear down cleanly.
-      stream.getVideoTracks()[0]?.addEventListener("ended", () => void stop());
+      // Listen on every video track so audio-only/multi-track captures still fire.
+      stream
+        .getVideoTracks()
+        .forEach((t) => t.addEventListener("ended", () => void stop()));
 
       setStatus(`WHIP ingest → ${whipEndpoint()}`);
       sessionRef.current = await whipPublish(whipEndpoint(), stream);

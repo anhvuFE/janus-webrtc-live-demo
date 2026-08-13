@@ -1,0 +1,14 @@
+// TextRoom plugin config (demo) — powers the /stage chat over a WebRTC data channel.
+// Docs: https://janus.conf.meetecho.com/docs/textroom.html
+
+general: {
+	//admin_key = "supersecret"
+}
+
+// Chat room 1234 — mirrors the VideoRoom id used by the stage.
+room-1234: {
+	description = "Janus WebRTC Live Demo — Stage Chat"
+	is_private = false
+	history = 30            // replay the last 30 messages to a joining user
+	post = ""              // optional webhook for posted messages
+}

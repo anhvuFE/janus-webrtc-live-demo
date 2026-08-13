@@ -1,0 +1,53 @@
+# MediaMTX config for the buffered path: WHIP ingest -> LL-HLS egress.
+# Docs: https://github.com/bluenviron/mediamtx
+#
+# Flow:
+#   Browser (WHIP publish) --WebRTC--> :8889/<path>/whip
+#                                         |
+#                                   MediaMTX remux
+#                                         |
+#   Browser (hls.js)  <--LL-HLS-- :8888/<path>/index.m3u8
+
+logLevel: info
+
+# --- Protocols we don't need for this demo ---
+rtsp: false
+rtmp: false
+srt: false
+
+# --- WebRTC / WHIP ingest ---
+webrtc: true
+webrtcAddress: :8889
+# Single UDP mux port for ICE (exposed in docker-compose.yml).
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: ''
+# Advertise loopback so local single-machine ICE works (see README networking note).
+# Add your LAN IP here for cross-device testing, e.g. [127.0.0.1, 192.168.1.20].
+webrtcAdditionalHosts: [127.0.0.1]
+
+# --- LL-HLS egress ---
+hls: true
+hlsAddress: :8888
+hlsVariant: lowLatency
+# Keep remuxing even with no readers so the playlist is ready when a viewer joins.
+hlsAlwaysRemux: true
+hlsSegmentCount: 7
+hlsSegmentDuration: 1s
+hlsPartDuration: 200ms
+# Allow the Next.js dev origin to fetch the playlist/segments.
+hlsAllowOrigins: ['*']
+
+# --- Server-side recording ---
+# Every published stream is archived to disk as fragmented MP4 (directly
+# playable). One file per broadcast session; browse them at /recordings.
+pathDefaults:
+  record: true
+  recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+  recordFormat: fmp4
+  recordSegmentDuration: 1h
+  recordDeleteAfter: 0s   # keep recordings (demo); set e.g. 7d to auto-prune
+
+# --- Paths ---
+# Allow any path to be published/read without auth (demo only).
+paths:
+  all_others:

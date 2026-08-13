@@ -30,6 +30,9 @@ export interface AttachOptions {
   onlocaltrack?: (track: MediaStreamTrack, on: boolean) => void;
   onremotetrack?: (track: MediaStreamTrack, mid: string, on: boolean) => void;
   webrtcState?: (isUp: boolean) => void;
+  // Data-channel callbacks (TextRoom chat).
+  ondataopen?: (label?: string, protocol?: string) => void;
+  ondata?: (data: string, label?: string) => void;
   oncleanup?: () => void;
 }
 

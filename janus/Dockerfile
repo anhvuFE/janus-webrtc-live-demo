@@ -15,6 +15,7 @@ RUN ln -sfn "/usr/lib/$(uname -m)-linux-gnu/janus" /usr/lib/janus \
 # Our demo configuration.
 COPY janus.jcfg /etc/janus/janus.jcfg
 COPY janus.plugin.videoroom.jcfg /etc/janus/janus.plugin.videoroom.jcfg
+COPY janus.plugin.textroom.jcfg /etc/janus/janus.plugin.textroom.jcfg
 COPY janus.transport.websockets.jcfg /etc/janus/janus.transport.websockets.jcfg
 COPY janus.transport.http.jcfg /etc/janus/janus.transport.http.jcfg
 

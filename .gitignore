@@ -22,3 +22,7 @@ web/next-env.d.ts.timestamp
 # typescript
 *.tsbuildinfo
 web/.tsbuildinfo
+
+# recordings (keep folder, ignore media)
+recordings/*
+!recordings/.gitkeep

@@ -584,26 +584,48 @@ button:disabled {
   margin-top: 30px;
 }
 
-/* 3D perspective media gallery */
+/* 3D perspective media gallery — concave "wall of screens" */
 .ev-gallery {
+  padding: 34px 0 46px;
+  overflow: hidden; /* let the arc bleed off both edges */
+  perspective: 1200px;
+  perspective-origin: center 40%;
+}
+
+.ev-stage {
   display: flex;
   justify-content: center;
   align-items: center;
-  perspective: 1600px;
   transform-style: preserve-3d;
-  padding: 30px 0 56px;
-  overflow: hidden;
+  animation: ev-sway 16s ease-in-out infinite alternate;
 }
 
 .ev-tile {
   flex: none;
-  width: clamp(96px, 11vw, 150px);
-  height: clamp(134px, 15.4vw, 210px);
-  margin: 0 -8px;
-  border-radius: 14px;
-  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.22);
-  outline: 3px solid rgba(255, 255, 255, 0.7);
-  outline-offset: -3px;
+  width: clamp(120px, 13vw, 184px);
+  height: clamp(174px, 18.8vw, 266px);
+  margin: 0 -16px;
+  border-radius: 16px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.28);
+  outline: 4px solid rgba(255, 255, 255, 0.85);
+  outline-offset: -4px;
+  transition: transform 0.3s ease;
+}
+
+/* Gentle parallax sway so the 3D depth reads as motion. */
+@keyframes ev-sway {
+  from {
+    transform: rotateY(-7deg) rotateX(2deg);
+  }
+  to {
+    transform: rotateY(7deg) rotateX(2deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ev-stage {
+    animation: none;
+  }
 }
 
 /* Meet section */

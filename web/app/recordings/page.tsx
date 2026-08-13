@@ -21,6 +21,9 @@ export default function RecordingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // No `selected` dependency: `load` must stay stable so selecting a recording
+  // doesn't recreate it and re-fire the fetch effect. Default-select via the
+  // functional setState instead.
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -28,15 +31,13 @@ export default function RecordingsPage() {
       const res = await fetch("/api/recordings", { cache: "no-store" });
       const data = (await res.json()) as { recordings: RecordingEntry[] };
       setItems(data.recordings);
-      if (!selected && data.recordings.length) {
-        setSelected(data.recordings[0].id);
-      }
+      setSelected((prev) => prev ?? data.recordings[0]?.id ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
-  }, [selected]);
+  }, []);
 
   useEffect(() => {
     void load();

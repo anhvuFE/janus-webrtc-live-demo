@@ -19,7 +19,12 @@ function waitIceGatheringComplete(
 ): Promise<void> {
   if (pc.iceGatheringState === "complete") return Promise.resolve();
   return new Promise((resolve) => {
+    let timer: ReturnType<typeof setTimeout>;
+    let settled = false;
     const done = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       pc.removeEventListener("icegatheringstatechange", check);
       resolve();
     };
@@ -28,7 +33,7 @@ function waitIceGatheringComplete(
     };
     pc.addEventListener("icegatheringstatechange", check);
     // Fallback: don't block forever if a candidate stalls.
-    setTimeout(done, timeoutMs);
+    timer = setTimeout(done, timeoutMs);
   });
 }
 

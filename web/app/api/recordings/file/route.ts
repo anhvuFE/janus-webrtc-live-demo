@@ -32,9 +32,19 @@ export async function GET(request: Request) {
 
   if (range) {
     const match = /bytes=(\d*)-(\d*)/.exec(range);
-    const start = match && match[1] ? parseInt(match[1], 10) : 0;
-    const end = match && match[2] ? parseInt(match[2], 10) : size - 1;
-    if (start >= size || end >= size) {
+    let start: number;
+    let end: number;
+    if (match && match[1] === "" && match[2] !== "") {
+      // Suffix range: `bytes=-N` means the last N bytes (Safari, some clients).
+      const n = parseInt(match[2], 10);
+      start = Math.max(0, size - n);
+      end = size - 1;
+    } else {
+      start = match && match[1] ? parseInt(match[1], 10) : 0;
+      end = match && match[2] ? parseInt(match[2], 10) : size - 1;
+    }
+    if (end >= size) end = size - 1; // clamp to last byte
+    if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= size) {
       return new Response("Range Not Satisfiable", {
         status: 416,
         headers: { "Content-Range": `bytes */${size}` },

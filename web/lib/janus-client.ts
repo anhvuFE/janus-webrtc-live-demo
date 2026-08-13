@@ -167,8 +167,14 @@ export async function startWatching(
   const remoteStream = new MediaStream();
   let stopped = false;
 
-  const feedId = await waitForPublisher(session, cb, () => stopped);
-  if (stopped) return () => undefined;
+  // Stop polling if the caller aborts (stop()) OR the session is torn down on
+  // unmount, so we don't keep probing / firing callbacks on a dead page.
+  const feedId = await waitForPublisher(
+    session,
+    cb,
+    () => stopped || !session.isConnected()
+  );
+  if (stopped || !session.isConnected()) return () => undefined;
   if (feedId == null) {
     cb.onError?.("No active presenter found in the room.");
     return () => undefined;
@@ -243,6 +249,14 @@ function waitForPublisher(
   return new Promise((resolve) => {
     let probe: JanusPluginHandle = null;
     let attempts = 0;
+    let detached = false;
+
+    const finish = (feed: number | null) => {
+      if (detached) return;
+      detached = true;
+      probe?.detach();
+      resolve(feed);
+    };
 
     session.attach({
       plugin: VIDEOROOM,
@@ -251,32 +265,29 @@ function waitForPublisher(
         probe = pluginHandle;
         poll();
       },
-      error: () => resolve(null),
+      error: () => finish(null),
       onmessage: (msg: Record<string, unknown>) => {
+        if (detached) return;
         const participants = msg["participants"] as
           | Array<Record<string, unknown>>
           | undefined;
         if (!participants) return;
         const publisher = participants.find((p) => p["publisher"] === true);
         if (publisher) {
-          probe.detach();
-          resolve(Number(publisher["id"]));
-        } else {
+          finish(Number(publisher["id"]));
+        } else if (!isStopped()) {
           cb.onWaiting?.();
           setTimeout(poll, 1500);
+        } else {
+          finish(null);
         }
       },
     });
 
     function poll() {
-      if (isStopped()) {
-        probe?.detach();
-        resolve(null);
-        return;
-      }
-      if (attempts++ > 120) {
-        probe?.detach();
-        resolve(null);
+      if (detached) return;
+      if (isStopped() || attempts++ > 120) {
+        finish(null);
         return;
       }
       probe.send({ message: { request: "listparticipants", room: JANUS_ROOM } });

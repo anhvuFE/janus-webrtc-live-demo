@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type RefObject,
 } from "react";
@@ -31,6 +32,9 @@ export function NotesPanel({
   const key = `review-notes:${storageKey}`;
   const [notes, setNotes] = useState<Note[]>([]);
   const [draft, setDraft] = useState("");
+  // Guards against a single pin creating two notes (React StrictMode double
+  // invoke in dev, Enter + click, or IME confirm firing twice).
+  const lastAddRef = useRef(0);
 
   useEffect(() => {
     try {
@@ -57,10 +61,23 @@ export function NotesPanel({
   const add = useCallback(() => {
     const text = draft.trim();
     if (!text) return;
+    const now = Date.now();
+    if (now - lastAddRef.current < 400) return; // drop rapid duplicate fire
+    lastAddRef.current = now;
     const t = videoRef.current?.currentTime ?? 0;
-    persist([...notes, { t, text, at: Date.now() }]);
+    setNotes((prev) => {
+      const next = [...prev, { t, text, at: now }].sort(
+        (a, b) => a.t - b.t || a.at - b.at
+      );
+      try {
+        localStorage.setItem(key, JSON.stringify(next));
+      } catch {
+        /* storage full / disabled — keep in memory */
+      }
+      return next;
+    });
     setDraft("");
-  }, [draft, notes, persist, videoRef]);
+  }, [draft, key, videoRef]);
 
   const seek = useCallback(
     (t: number) => {
@@ -111,7 +128,9 @@ export function NotesPanel({
           placeholder="Note at current time…"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && add()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.nativeEvent.isComposing) add();
+          }}
         />
         <button className="primary" onClick={add}>
           Pin

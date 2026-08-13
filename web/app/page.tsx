@@ -1,17 +1,5 @@
 import Link from "next/link";
-
-// Colourful "media stills" for the 3D gallery fan (abstract, stand-in thumbnails).
-const TILE_GRADIENTS = [
-  "linear-gradient(160deg,#f97316,#7c2d12)",
-  "linear-gradient(160deg,#0ea5e9,#0c4a6e)",
-  "linear-gradient(160deg,#a855f7,#3b0764)",
-  "linear-gradient(160deg,#f43f5e,#7f1d1d)",
-  "linear-gradient(160deg,#22c55e,#14532d)",
-  "linear-gradient(160deg,#eab308,#713f12)",
-  "linear-gradient(160deg,#06b6d4,#164e63)",
-  "linear-gradient(160deg,#ec4899,#831843)",
-  "linear-gradient(160deg,#6366f1,#312e81)",
-];
+import { MediaWall } from "@/components/MediaWall";
 
 const SHOTS = [
   {
@@ -32,8 +20,6 @@ const SHOTS = [
 ];
 
 export default function Home() {
-  const center = (TILE_GRADIENTS.length - 1) / 2;
-
   return (
     <div className="evercast">
       <nav className="ev-nav">
@@ -87,28 +73,7 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="ev-gallery" aria-hidden>
-        <div className="ev-stage">
-          {TILE_GRADIENTS.map((g, i) => {
-            const d = i - center; // <0 left, >0 right
-            return (
-              <div
-                key={i}
-                className="ev-tile"
-                style={{
-                  background: g,
-                  // Concave "wall of screens": edges rotate inward, come forward
-                  // (bigger) and rise; the centre recedes.
-                  transform: `rotateY(${-d * 26}deg) translateZ(${
-                    Math.abs(d) * 30
-                  }px) translateY(${-Math.abs(d) * 6}px)`,
-                  zIndex: Math.round(Math.abs(d)),
-                }}
-              />
-            );
-          })}
-        </div>
-      </div>
+      <MediaWall />
 
       <section id="meet" className="ev-meet">
         <span className="ev-eyebrow">Meet Janus Live</span>

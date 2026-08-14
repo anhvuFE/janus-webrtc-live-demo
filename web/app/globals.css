@@ -602,9 +602,9 @@ button:disabled {
 
 /* Scroll-linked cylindrical media wall */
 .ev-gallery {
-  padding: 30px 0 44px;
+  padding: 40px 0 54px;
   overflow: hidden; /* let the curve bleed off both edges */
-  perspective: 1150px;
+  perspective: 900px;
   perspective-origin: center center;
 }
 

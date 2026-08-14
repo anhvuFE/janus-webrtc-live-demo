@@ -5,10 +5,13 @@ import { useEffect, useRef } from "react";
 // Real photographic stills (vendored in /public/wall) for the curved wall.
 const TILES = Array.from({ length: 12 }, (_, i) => `/wall/${i + 1}.jpg`);
 
-const MAX_ANGLE = 66; // degrees at the far edges
-const DEPTH = 270; // px the edges recede (perspective shrinks them)
-const SCALE_DROP = 0.13; // extra shrink toward the edges (centre stays largest)
-const CURVE = 0.82; // <1 ramps mid tiles into the curve sooner (tighter arc)
+// Evercast-style wall: the MIDDLE of the strip bows away (small, flat) while the
+// two ends wrap toward the viewer (large, angled hard inward).
+const MAX_ANGLE = 74; // steep angle at the far edges
+const RECEDE = 220; // px the centre recedes (so it reads smaller)
+const SCALE_MIN = 0.82; // centre tile scale …
+const SCALE_RANGE = 0.55; // … edges grow to SCALE_MIN + SCALE_RANGE
+const CURVE = 1.5; // >1 keeps the centre flat and only bends the outer tiles
 const SHIFT = 420; // px the strip travels across the scroll range
 
 function clamp(v: number, lo: number, hi: number) {
@@ -45,13 +48,13 @@ export function MediaWall() {
         if (!tile) continue;
         const r = tile.getBoundingClientRect();
         const delta = clamp((r.left + r.width / 2 - cx) / half, -1, 1);
-        // Ramp the curve so mid tiles bend in sooner (tighter cylinder).
-        const mag = Math.pow(Math.abs(delta), CURVE);
-        const rotY = -Math.sign(delta) * MAX_ANGLE * mag;
-        const z = -mag * DEPTH;
-        const scale = 1 - Math.abs(delta) * SCALE_DROP;
-        tile.style.transform = `rotateY(${rotY}deg) translateZ(${z}px) scale(${scale})`;
-        tile.style.opacity = String(clamp(1 - Math.abs(delta) * 0.3, 0.5, 1));
+        const m = Math.abs(delta);
+        // Centre recedes (small, flat); the ends wrap forward (large) and angle
+        // hard inward. CURVE>1 keeps the middle flat and only bends the outers.
+        const rotY = -Math.sign(delta) * MAX_ANGLE * Math.pow(m, CURVE);
+        const z = -(1 - m) * RECEDE;
+        const scale = SCALE_MIN + m * SCALE_RANGE;
+        tile.style.transform = `translateZ(${z}px) rotateY(${rotY}deg) scale(${scale})`;
       }
     };
 

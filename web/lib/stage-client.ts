@@ -49,6 +49,7 @@ export async function joinStage(
   const subscribed = new Set<number>();
   let subAttaching = false;
   let pending: Publisher[] = [];
+  let left = false; // set by leave(); guards late async attach callbacks
 
   function ensureFeed(id: number, display?: string): RemoteFeed {
     let feed = feeds.get(id);
@@ -118,8 +119,13 @@ export async function joinStage(
       plugin: VIDEOROOM,
       opaqueId: `stage-sub-${Date.now()}`,
       success: (h: JanusPluginHandle) => {
-        subHandle = h;
         subAttaching = false;
+        if (left) {
+          // User already left before the attach completed — don't join.
+          h.detach();
+          return;
+        }
+        subHandle = h;
         h.send({
           message: {
             request: "join",
@@ -135,41 +141,50 @@ export async function joinStage(
           doSubscribe(queued);
         }
       },
-      error: (err: unknown) => cb.onError?.(String(err)),
-        onmessage: (msg: Record<string, unknown>, jsep?: unknown) => {
-          const streamsInfo = msg["streams"] as
-            | Array<Record<string, unknown>>
-            | undefined;
-          if (streamsInfo) mapStreams(streamsInfo);
-          if (jsep) {
-            subHandle.createAnswer({
-              jsep,
-              tracks: [{ type: "data" }],
-              success: (answer: unknown) => {
-                subHandle.send({
-                  message: { request: "start", room: JANUS_ROOM },
-                  jsep: answer,
-                });
-              },
-              error: (err: unknown) => cb.onError?.(String(err)),
-            });
-          }
-        },
-        onremotetrack: (track: MediaStreamTrack, mid: string, on: boolean) => {
-          const feedId = midToFeed.get(mid);
-          if (feedId == null) return;
-          const feed = feeds.get(feedId);
-          if (!feed) return;
-          if (on) {
-            feed.stream
-              .getTracks()
-              .filter((t) => t.kind === track.kind && t.id !== track.id)
-              .forEach((t) => feed.stream.removeTrack(t));
-            feed.stream.addTrack(track);
-            cb.onRemoteFeed?.(feed);
-          }
-        },
-      });
+      error: (err: unknown) => {
+        // Attach failed: unwind state so the user can retry instead of being
+        // permanently wedged (subAttaching stuck true, feeds poisoned).
+        subAttaching = false;
+        toAdd.forEach((p) => subscribed.delete(p.id));
+        const queued = pending;
+        pending = [];
+        cb.onError?.(String(err));
+        if (queued.length) subscribeTo(queued);
+      },
+      onmessage: (msg: Record<string, unknown>, jsep?: unknown) => {
+        const streamsInfo = msg["streams"] as
+          | Array<Record<string, unknown>>
+          | undefined;
+        if (streamsInfo) mapStreams(streamsInfo);
+        if (jsep) {
+          subHandle.createAnswer({
+            jsep,
+            tracks: [{ type: "data" }],
+            success: (answer: unknown) => {
+              subHandle.send({
+                message: { request: "start", room: JANUS_ROOM },
+                jsep: answer,
+              });
+            },
+            error: (err: unknown) => cb.onError?.(String(err)),
+          });
+        }
+      },
+      onremotetrack: (track: MediaStreamTrack, mid: string, on: boolean) => {
+        const feedId = midToFeed.get(mid);
+        if (feedId == null) return;
+        const feed = feeds.get(feedId);
+        if (!feed) return;
+        if (on) {
+          feed.stream
+            .getTracks()
+            .filter((t) => t.kind === track.kind && t.id !== track.id)
+            .forEach((t) => feed.stream.removeTrack(t));
+          feed.stream.addTrack(track);
+          cb.onRemoteFeed?.(feed);
+        }
+      },
+    });
   }
 
   return new Promise((resolve, reject) => {
@@ -218,6 +233,10 @@ export async function joinStage(
               });
               resolve({
                 leave: () => {
+                  left = true;
+                  subAttaching = false;
+                  pending = [];
+                  subscribed.clear();
                   try {
                     pubHandle.send({ message: { request: "leave" } });
                   } catch {
@@ -232,14 +251,16 @@ export async function joinStage(
                   pubHandle.detach();
                 },
               });
+              // Subscribe to already-present publishers only after the publisher
+              // side is committed, so subHandle can't leak on an offer failure.
+              const existing = (msg["publishers"] as Publisher[]) ?? [];
+              if (existing.length) subscribeTo(existing);
             },
             error: (err: unknown) => {
               cb.onError?.(`Failed to create offer: ${String(err)}`);
               reject(new Error(String(err)));
             },
           });
-          const existing = (msg["publishers"] as Publisher[]) ?? [];
-          if (existing.length) subscribeTo(existing);
         } else if (event === "event") {
           const publishers = msg["publishers"] as Publisher[] | undefined;
           if (publishers && publishers.length) subscribeTo(publishers);

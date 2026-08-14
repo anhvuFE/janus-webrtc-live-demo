@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return new Response("Missing id", { status: 400 });
 
-  const filePath = resolveRecording(id);
+  const filePath = await resolveRecording(id);
   if (!filePath) return new Response("Invalid id", { status: 400 });
 
   let size: number;
@@ -30,18 +30,20 @@ export async function GET(request: Request) {
     "Cache-Control": "no-store",
   };
 
-  if (range) {
-    const match = /bytes=(\d*)-(\d*)/.exec(range);
+  const match = range ? /bytes=(\d*)-(\d*)/.exec(range) : null;
+  // A syntactically invalid Range (unparseable, or both bounds empty) is ignored
+  // — serve the whole file (200) rather than a bogus 206.
+  if (match && !(match[1] === "" && match[2] === "")) {
     let start: number;
     let end: number;
-    if (match && match[1] === "" && match[2] !== "") {
+    if (match[1] === "" && match[2] !== "") {
       // Suffix range: `bytes=-N` means the last N bytes (Safari, some clients).
       const n = parseInt(match[2], 10);
       start = Math.max(0, size - n);
       end = size - 1;
     } else {
-      start = match && match[1] ? parseInt(match[1], 10) : 0;
-      end = match && match[2] ? parseInt(match[2], 10) : size - 1;
+      start = match[1] ? parseInt(match[1], 10) : 0;
+      end = match[2] ? parseInt(match[2], 10) : size - 1;
     }
     if (end >= size) end = size - 1; // clamp to last byte
     if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= size) {

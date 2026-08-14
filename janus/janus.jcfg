@@ -39,7 +39,9 @@ nat: {
 	nat_1_1_mapping = "127.0.0.1"
 
 	// coturn (see coturn/turnserver.conf). Uncomment for real NAT traversal.
-	// turn_server = "127.0.0.1"
+	// Use the compose service name "coturn" (127.0.0.1 would point at the janus
+	// container itself, not coturn).
+	// turn_server = "coturn"
 	// turn_port = 3478
 	// turn_type = "udp"
 	// turn_user = "januswebrtc"

@@ -45,15 +45,17 @@ export function NotesPanel({
     }
   }, [key]);
 
-  const persist = useCallback(
+  // Sort + persist a fully-computed note list; used inside functional updaters
+  // so we never overwrite React's queued state with a stale snapshot.
+  const commit = useCallback(
     (next: Note[]) => {
       next.sort((a, b) => a.t - b.t || a.at - b.at);
-      setNotes(next);
       try {
         localStorage.setItem(key, JSON.stringify(next));
       } catch {
         /* storage full / disabled — keep in memory */
       }
+      return next;
     },
     [key]
   );
@@ -65,19 +67,9 @@ export function NotesPanel({
     if (now - lastAddRef.current < 400) return; // drop rapid duplicate fire
     lastAddRef.current = now;
     const t = videoRef.current?.currentTime ?? 0;
-    setNotes((prev) => {
-      const next = [...prev, { t, text, at: now }].sort(
-        (a, b) => a.t - b.t || a.at - b.at
-      );
-      try {
-        localStorage.setItem(key, JSON.stringify(next));
-      } catch {
-        /* storage full / disabled — keep in memory */
-      }
-      return next;
-    });
+    setNotes((prev) => commit([...prev, { t, text, at: now }]));
     setDraft("");
-  }, [draft, key, videoRef]);
+  }, [draft, commit, videoRef]);
 
   const seek = useCallback(
     (t: number) => {
@@ -90,8 +82,8 @@ export function NotesPanel({
   );
 
   const remove = useCallback(
-    (note: Note) => persist(notes.filter((n) => n !== note)),
-    [notes, persist]
+    (note: Note) => setNotes((prev) => commit(prev.filter((n) => n !== note))),
+    [commit]
   );
 
   return (

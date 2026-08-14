@@ -9,7 +9,8 @@ RUN apt-get update \
 
 # Create a stable, arch-independent symlink so our jcfg folder paths are valid
 # on both x86_64 and aarch64 (the package installs under /usr/lib/<triplet>/janus).
-RUN ln -sfn "/usr/lib/$(uname -m)-linux-gnu/janus" /usr/lib/janus \
+# Glob the target rootfs (not `uname -m`) so cross-platform buildx builds work too.
+RUN ln -sfn "$(ls -d /usr/lib/*-linux-gnu/janus)" /usr/lib/janus \
     && ls -la /usr/lib/janus/plugins | grep videoroom
 
 # Our demo configuration.

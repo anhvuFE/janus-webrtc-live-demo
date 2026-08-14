@@ -230,6 +230,7 @@ export async function startWatching(
                 jsep: answer,
               });
               resolve(() => {
+                stopped = true; // abort any in-flight polling too
                 remoteStream.getTracks().forEach((t) => t.stop());
                 handle.hangup();
                 handle.detach();

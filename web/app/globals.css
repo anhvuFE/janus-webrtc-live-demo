@@ -793,22 +793,38 @@ button:disabled {
 
 /* Use-case grid */
 .ev-usecases {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
   max-width: 1080px;
   margin: 36px auto 0;
   padding: 0 24px;
+  perspective: 1500px;
+}
+
+.ev-uc-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.ev-uc-row + .ev-uc-row {
+  margin-top: 16px;
+}
+
+/* The bottom row rises over the top row during the scroll animation. */
+.ev-uc-row-front {
+  position: relative;
+  z-index: 2;
 }
 
 @media (max-width: 900px) {
-  .ev-usecases {
+  .ev-uc-row {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 520px) {
-  .ev-usecases {
+  .ev-uc-row {
     grid-template-columns: 1fr;
   }
 }

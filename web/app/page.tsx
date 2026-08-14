@@ -2,23 +2,13 @@ import Link from "next/link";
 import { MediaWall } from "@/components/MediaWall";
 import { AppMarquee } from "@/components/AppMarquee";
 import { Pricing } from "@/components/Pricing";
+import { UseCases } from "@/components/UseCases";
 
 // Mock conferencing windows shown above the performance stats.
 const CALLS = [
   { title: "Zoom Meeting", variant: "zoom", share: "green" },
   { title: "Teams Meeting", variant: "teams", share: "indigo" },
   { title: "Google Meet", variant: "meet", share: "red" },
-];
-
-const USE_CASES = [
-  { img: "/usecases/1.jpg", t: "Live events", d: "Broadcast keynotes to many viewers." },
-  { img: "/usecases/2.jpg", t: "Client reviews", d: "Frame-accurate remote approvals." },
-  { img: "/usecases/3.jpg", t: "Town halls", d: "All-hands with low latency at scale." },
-  { img: "/usecases/4.jpg", t: "Creative sessions", d: "Shoulder-to-shoulder editing remotely." },
-  { img: "/usecases/5.jpg", t: "Product demos", d: "Show a screen/app in crisp quality." },
-  { img: "/usecases/6.jpg", t: "Remote teaching", d: "Lectures with chat and recording." },
-  { img: "/usecases/7.jpg", t: "Watch parties", d: "Synced playback with reactions." },
-  { img: "/usecases/8.jpg", t: "Live sports", d: "Multi-cam feeds, minimal delay." },
 ];
 
 const FAQS = [
@@ -166,18 +156,7 @@ export default function Home() {
         <span className="ev-eyebrow">For moments that matter</span>
         <h2 className="ev-h2">Showcase your best work</h2>
       </section>
-      <section className="ev-usecases">
-        {USE_CASES.map((u) => (
-          <div className="ev-uc" key={u.t}>
-            <div
-              className="ev-uc-img"
-              style={{ backgroundImage: `url(${u.img})` }}
-            />
-            <strong>{u.t}</strong>
-            <span>{u.d}</span>
-          </div>
-        ))}
-      </section>
+      <UseCases />
 
       <Pricing />
 

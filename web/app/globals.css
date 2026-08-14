@@ -1214,8 +1214,15 @@ button:disabled {
 
 .ev-call-stage {
   aspect-ratio: 16 / 10;
-  background-size: cover;
-  background-position: center;
+  overflow: hidden;
+  background: #000;
+}
+
+.ev-call-stage video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .ev-call-toolbar {

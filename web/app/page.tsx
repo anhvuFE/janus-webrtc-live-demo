@@ -107,10 +107,19 @@ export default function Home() {
                 <img key={a} src={a} alt="" />
               ))}
             </div>
-            <div
-              className="ev-call-stage"
-              style={{ backgroundImage: "url(/wall/1.jpg)" }}
-            />
+            <div className="ev-call-stage">
+              {/* Placeholder "shared screen" clip: Big Buck Bunny,
+                  © Blender Foundation, CC-BY 3.0 (peach.blender.org). */}
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <video
+                src="/mock-share.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+              />
+            </div>
             <div className="ev-call-toolbar">
               <i />
               <i />

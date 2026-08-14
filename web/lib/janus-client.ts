@@ -94,7 +94,10 @@ export async function startPublishing(
           },
         });
       },
-      error: (err: unknown) => reject(new Error(String(err))),
+      error: (err: unknown) => {
+        cb.onError?.(String(err));
+        reject(new Error(String(err)));
+      },
       onlocaltrack: (track: MediaStreamTrack, on: boolean) => {
         if (!on) return;
         // Avoid duplicate tracks of the same kind across renegotiations.
@@ -198,7 +201,10 @@ export async function startWatching(
           },
         });
       },
-      error: (err: unknown) => reject(new Error(String(err))),
+      error: (err: unknown) => {
+        cb.onError?.(String(err));
+        reject(new Error(String(err)));
+      },
       onremotetrack: (track: MediaStreamTrack, _mid: string, on: boolean) => {
         if (!on) return;
         remoteStream

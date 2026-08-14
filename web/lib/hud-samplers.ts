@@ -115,6 +115,13 @@ export function makeHlsSampler(
         label: "bandwidth",
         value: bw ? `${(bw / 1_000_000).toFixed(1)} Mbps` : "—",
       });
+    } else if (video.seekable.length > 0) {
+      // Safari native HLS: estimate live-edge latency from the seekable window.
+      const edge = video.seekable.end(video.seekable.length - 1);
+      stats.push({
+        label: "latency",
+        value: `${Math.max(0, edge - video.currentTime).toFixed(1)} s`,
+      });
     }
     return stats;
   };

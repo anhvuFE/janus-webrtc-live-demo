@@ -170,7 +170,7 @@ export default function Home() {
       <section className="ev-super">
         <div className="ev-super-card">
           <div className="ev-super-vis ev-super-connect">
-            <span className="ev-mini-mark">JW</span>
+            <span className="ev-mini-mark">JL</span>
             <span className="ev-super-arrow">→</span>
             <span className="ev-mini-app" style={{ background: "linear-gradient(160deg,#38bdf8,#1d4ed8)" }} />
           </div>
@@ -226,7 +226,7 @@ export default function Home() {
       </section>
 
       <section className="ev-dark">
-        <div className="ev-dark-mark">JW</div>
+        <div className="ev-dark-mark">JL</div>
         <h2>Looking for full production-grade streaming?</h2>
         <p>
           The same architecture scales to multi-region relays, DRM and 10-bit

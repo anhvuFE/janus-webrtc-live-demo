@@ -78,6 +78,25 @@ export default function PresentPage() {
 
       <div className="video-wrap">
         <video ref={videoRef} autoPlay playsInline muted />
+        {!live && (
+          <div className="video-placeholder">
+            <svg
+              className="video-placeholder-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <rect x="2.5" y="6.5" width="12" height="11" rx="2.5" />
+              <path d="M14.5 10.5l6-3v10l-6-3" />
+            </svg>
+            <strong>Your camera preview goes here</strong>
+            <span>Hit “Go live” to publish to the Janus room — viewers watch on /watch.</span>
+          </div>
+        )}
       </div>
 
       <div className="status">

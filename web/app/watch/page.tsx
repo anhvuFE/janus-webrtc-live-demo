@@ -79,6 +79,25 @@ export default function WatchPage() {
 
       <div className="video-wrap" ref={wrapRef}>
         <video ref={videoRef} autoPlay playsInline />
+        {!watching && (
+          <div className="video-placeholder">
+            <svg
+              className="video-placeholder-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <rect x="2.5" y="4" width="19" height="13" rx="2" />
+              <path d="M8 21h8M12 17.5V21" />
+            </svg>
+            <strong>No stream yet</strong>
+            <span>Hit “Watch live” to join the active presenter’s WebRTC feed.</span>
+          </div>
+        )}
         {watching && <Watermark label={tag} />}
       </div>
 

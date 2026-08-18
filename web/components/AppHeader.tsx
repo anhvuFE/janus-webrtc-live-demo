@@ -19,7 +19,7 @@ export function AppHeader({ badge }: { badge?: ReactNode }) {
   return (
     <header className="app-header">
       <Link href="/" className="app-brand">
-        <span className="app-mark">JW</span>
+        <span className="app-mark">JL</span>
         Janus&nbsp;Live
       </Link>
       <nav className="app-nav">

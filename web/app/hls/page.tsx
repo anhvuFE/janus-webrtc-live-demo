@@ -104,6 +104,25 @@ export default function HlsPage() {
 
       <div className="video-wrap" ref={wrapRef}>
         <video ref={videoRef} controls playsInline />
+        {!playing && (
+          <div className="video-placeholder">
+            <svg
+              className="video-placeholder-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M10 8.5l6 3.5-6 3.5z" />
+            </svg>
+            <strong>Nothing playing yet</strong>
+            <span>Start /broadcast first, then press “Play stream”.</span>
+          </div>
+        )}
         {playing && <Watermark label={`${tag} · ${MEDIAMTX_STREAM}`} />}
         {playing && <StatsHud sampler={sampler} />}
       </div>

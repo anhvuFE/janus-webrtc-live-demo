@@ -1614,6 +1614,39 @@ button:disabled {
     0 24px 60px rgba(0, 0, 0, 0.35);
 }
 
+/* Friendly idle overlay shown inside a .video-wrap before anything is playing. */
+.video-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.video-placeholder-icon {
+  width: 42px;
+  height: 42px;
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.video-placeholder strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.video-placeholder span {
+  font-size: 13px;
+  max-width: 34ch;
+}
+
 .page-head {
   margin: 0 0 6px;
   font-size: 30px;
@@ -1712,12 +1745,70 @@ video {
   position: absolute;
   left: 8px;
   bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.6);
   color: #fff;
+}
+
+/* Highlight the local participant so you can spot yourself at a glance. */
+.tile-you {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 2px var(--border-strong), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Little pulsing "live" dot on the You tile label. */
+.tile-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
+  animation: tile-pulse 1.8s ease-out infinite;
+}
+
+@keyframes tile-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 7px rgba(52, 211, 153, 0);
+  }
+}
+
+/* Friendly placeholder shown when you're alone on the stage. */
+.tile-ghost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.tile-ghost-icon {
+  width: 32px;
+  height: 32px;
+  opacity: 0.85;
+}
+
+.tile-ghost strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.tile-ghost span {
+  font-size: 12px;
+  max-width: 22ch;
 }
 
 .chat {
@@ -1745,6 +1836,24 @@ video {
   font-size: 12px;
   color: var(--muted);
   text-align: center;
+}
+
+/* Warmer empty state than a bare line of grey text. */
+.chat-empty {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.chat-empty-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.8;
 }
 
 .chat-msg {

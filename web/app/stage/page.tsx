@@ -33,6 +33,7 @@ function RemoteTile({ feed }: { feed: RemoteFeed }) {
 
 export default function StagePage() {
   const gridRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
   const localRef = useRef<HTMLVideoElement>(null);
   const sessionRef = useRef<JanusInstance | null>(null);
   const stageRef = useRef<StageHandle | null>(null);
@@ -127,6 +128,12 @@ export default function StagePage() {
 
   const remoteFeeds = [...feeds.values()];
 
+  // Keep the chat pinned to the newest message as it grows.
+  useEffect(() => {
+    const el = logRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [lines]);
+
   return (
     <main className="container" style={{ maxWidth: 1120 }}>
       <AppHeader
@@ -166,21 +173,56 @@ export default function StagePage() {
 
       <div className="stage-layout">
         <div className="grid" ref={gridRef}>
-          <div className="tile">
+          <div className="tile tile-you">
             <video ref={localRef} autoPlay playsInline muted />
-            <span className="tile-label">You{name ? ` · ${name}` : ""}</span>
+            <span className="tile-label">
+              <i className="tile-dot" />
+              You{name ? ` · ${name}` : ""}
+            </span>
           </div>
           {remoteFeeds.map((feed) => (
             <RemoteTile key={feed.id} feed={feed} />
           ))}
+          {joined && remoteFeeds.length === 0 && (
+            <div className="tile tile-ghost">
+              <svg
+                className="tile-ghost-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1" />
+                <circle cx="9" cy="7.5" r="3.5" />
+                <path d="M22 19v-1a4 4 0 0 0-3-3.87M16.5 4a4 4 0 0 1 0 7" />
+              </svg>
+              <strong>Just you so far</strong>
+              <span>Open this page in another tab or share the link to fill the stage.</span>
+            </div>
+          )}
         </div>
 
         <aside className="chat">
-          <div className="chat-log">
+          <div className="chat-log" ref={logRef}>
             {lines.length === 0 && (
-              <p style={{ color: "var(--muted)", fontSize: 13 }}>
-                No messages yet.
-              </p>
+              <div className="chat-empty">
+                <svg
+                  className="chat-empty-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M21 11.5a8.5 8.5 0 0 1-11.5 8L4 21l1.5-4.5A8.5 8.5 0 1 1 21 11.5z" />
+                </svg>
+                <p>{joined ? "Say hi to the room!" : "Join the stage to start chatting."}</p>
+              </div>
             )}
             {lines.map((line, i) =>
               line.kind === "system" ? (

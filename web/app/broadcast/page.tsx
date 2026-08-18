@@ -115,6 +115,38 @@ export default function BroadcastPage() {
 
       <div className="video-wrap">
         <video ref={videoRef} autoPlay playsInline muted />
+        {!live && (
+          <div className="video-placeholder">
+            <svg
+              className="video-placeholder-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              {source === "screen" ? (
+                <>
+                  <rect x="2.5" y="4" width="19" height="13" rx="2" />
+                  <path d="M8 21h8M12 17.5V21" />
+                </>
+              ) : (
+                <>
+                  <rect x="2.5" y="6.5" width="12" height="11" rx="2.5" />
+                  <path d="M14.5 10.5l6-3v10l-6-3" />
+                </>
+              )}
+            </svg>
+            <strong>
+              {source === "screen"
+                ? "Share a screen or app window"
+                : "Camera preview goes here"}
+            </strong>
+            <span>Press “Start ingest” to push over WHIP → LL-HLS.</span>
+          </div>
+        )}
         {live && <Watermark label={`ingest · ${MEDIAMTX_STREAM}`} />}
         {live && <StatsHud sampler={sampler} />}
       </div>

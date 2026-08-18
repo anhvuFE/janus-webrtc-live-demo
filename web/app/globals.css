@@ -1580,6 +1580,45 @@ button:disabled {
   gap: 10px;
 }
 
+/* Global "you're broadcasting" control — lets you stop from any page. */
+.present-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 5px 11px;
+  border-radius: 999px;
+  color: #ffd7dd;
+  background: rgba(244, 63, 94, 0.14);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.present-live-pill:hover {
+  background: rgba(244, 63, 94, 0.22);
+  border-color: rgba(244, 63, 94, 0.6);
+}
+
+.present-live-pill .tile-dot {
+  background: #f43f5e;
+}
+
+.present-live-pill .tile-dot {
+  animation: pill-pulse 1.8s ease-out infinite;
+}
+
+@keyframes pill-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 7px rgba(244, 63, 94, 0);
+  }
+}
+
 @media (max-width: 900px) {
   .app-nav {
     display: none;

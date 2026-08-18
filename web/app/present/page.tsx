@@ -1,65 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import {
-  createSession,
-  ensureJanus,
-  startPublishing,
-} from "@/lib/janus-client";
-import type { JanusInstance } from "@/lib/janus-types";
+  getPresenterState,
+  startPresenter,
+  stopPresenter,
+  subscribePresenter,
+} from "@/lib/presenter-session";
 import { AppHeader } from "@/components/AppHeader";
 
 export default function PresentPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const sessionRef = useRef<JanusInstance | null>(null);
-  const stopRef = useRef<(() => void) | null>(null);
+  // The session lives outside React (lib/presenter-session) so it survives
+  // navigation to another tab — we only mirror its state here.
+  const { live, busy, status, error, stream } = useSyncExternalStore(
+    subscribePresenter,
+    getPresenterState,
+    getPresenterState
+  );
 
-  const [live, setLive] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState("Ready to go live");
-  const [error, setError] = useState<string | null>(null);
-
-  const goLive = useCallback(async () => {
-    setError(null);
-    setBusy(true);
-    try {
-      await ensureJanus();
-      setStatus("Connecting to Janus…");
-      const session = await createSession();
-      sessionRef.current = session;
-
-      stopRef.current = await startPublishing(
-        session,
-        `Presenter-${Math.floor(Math.random() * 1000)}`,
-        {
-          onLocalStream: (stream) => {
-            if (videoRef.current) videoRef.current.srcObject = stream;
-          },
-          onStatus: setStatus,
-          onError: setError,
-        }
-      );
-      setLive(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setStatus("Failed to go live");
-    } finally {
-      setBusy(false);
-    }
-  }, []);
-
-  const stop = useCallback(() => {
-    stopRef.current?.();
-    stopRef.current = null;
-    sessionRef.current?.destroy();
-    sessionRef.current = null;
-    if (videoRef.current) videoRef.current.srcObject = null;
-    setLive(false);
-    setStatus("Stopped");
-  }, []);
-
-  // Tear down on unmount.
-  useEffect(() => () => stop(), [stop]);
+  // Re-attach the (possibly already-running) stream whenever it changes or when
+  // we navigate back to this page. NOTE: intentionally no teardown on unmount —
+  // leaving the page keeps the broadcast live; Stop ends it explicitly.
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.srcObject = stream;
+  }, [stream]);
 
   return (
     <main className="container">
@@ -73,7 +38,8 @@ export default function PresentPage() {
 
       <h1 className="page-head">Presenter</h1>
       <p className="page-sub">
-        Publish your camera to the Janus room — viewers watch on /watch.
+        Publish your camera to the Janus room — viewers watch on /watch. Your
+        broadcast keeps running if you switch to another tab.
       </p>
 
       <div className="video-wrap">
@@ -107,11 +73,11 @@ export default function PresentPage() {
 
       <div className="controls">
         {!live ? (
-          <button className="primary" onClick={goLive} disabled={busy}>
+          <button className="primary" onClick={startPresenter} disabled={busy}>
             {busy ? "Starting…" : "Go live"}
           </button>
         ) : (
-          <button className="danger" onClick={stop}>
+          <button className="danger" onClick={stopPresenter}>
             Stop streaming
           </button>
         )}

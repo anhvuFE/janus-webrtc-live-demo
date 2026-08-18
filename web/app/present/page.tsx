@@ -8,11 +8,17 @@ import {
 } from "@/lib/janus-client";
 import type { JanusInstance } from "@/lib/janus-types";
 import { AppHeader } from "@/components/AppHeader";
+import { FilterPanel } from "@/components/FilterPanel";
+import { useVideoFx } from "@/lib/use-video-fx";
 
 export default function PresentPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sessionRef = useRef<JanusInstance | null>(null);
   const stopRef = useRef<(() => void) | null>(null);
+  const rawRef = useRef<MediaStream | null>(null);
+  const { settings, setSettings, attach, release } = useVideoFx((m) =>
+    setError(m)
+  );
 
   const [live, setLive] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -23,6 +29,16 @@ export default function PresentPage() {
     setError(null);
     setBusy(true);
     try {
+      setStatus("Requesting camera…");
+      const raw = await navigator.mediaDevices.getUserMedia({
+        video: { frameRate: { ideal: 30 }, width: { ideal: 1280 } },
+        audio: true,
+      });
+      rawRef.current = raw;
+      // Run the FX pipeline and publish the processed stream.
+      const processed = await attach(raw);
+      if (videoRef.current) videoRef.current.srcObject = processed;
+
       await ensureJanus();
       setStatus("Connecting to Janus…");
       const session = await createSession();
@@ -32,12 +48,10 @@ export default function PresentPage() {
         session,
         `Presenter-${Math.floor(Math.random() * 1000)}`,
         {
-          onLocalStream: (stream) => {
-            if (videoRef.current) videoRef.current.srcObject = stream;
-          },
           onStatus: setStatus,
           onError: setError,
-        }
+        },
+        processed
       );
       setLive(true);
     } catch (e) {
@@ -53,10 +67,13 @@ export default function PresentPage() {
     stopRef.current = null;
     sessionRef.current?.destroy();
     sessionRef.current = null;
+    release();
+    rawRef.current?.getTracks().forEach((t) => t.stop());
+    rawRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
     setLive(false);
     setStatus("Stopped");
-  }, []);
+  }, [release]);
 
   // Tear down on unmount.
   useEffect(() => () => stop(), [stop]);
@@ -116,6 +133,8 @@ export default function PresentPage() {
           </button>
         )}
       </div>
+
+      <FilterPanel settings={settings} onChange={setSettings} />
     </main>
   );
 }

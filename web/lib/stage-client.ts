@@ -35,9 +35,13 @@ export interface StageHandle {
 export async function joinStage(
   session: JanusInstance,
   display: string,
-  cb: StageCallbacks
+  cb: StageCallbacks,
+  // Optional FX-processed stream to publish instead of the raw camera.
+  stream?: MediaStream
 ): Promise<StageHandle> {
   const localStream = new MediaStream();
+  const captureAudio = stream?.getAudioTracks()[0] ?? true;
+  const captureVideo = stream?.getVideoTracks()[0] ?? true;
   const feeds = new Map<number, RemoteFeed>();
   const midToFeed = new Map<string, number>();
 
@@ -223,8 +227,8 @@ export async function joinStage(
           cb.onStatus?.("Joined — starting camera…");
           pubHandle.createOffer({
             tracks: [
-              { type: "audio", capture: true, recv: false },
-              { type: "video", capture: true, recv: false },
+              { type: "audio", capture: captureAudio, recv: false },
+              { type: "video", capture: captureVideo, recv: false },
             ],
             success: (offer: unknown) => {
               pubHandle.send({

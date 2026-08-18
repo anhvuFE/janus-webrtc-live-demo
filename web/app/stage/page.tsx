@@ -18,23 +18,47 @@ type ChatLine =
   | { kind: "msg"; data: ChatMessage }
   | { kind: "system"; text: string };
 
-function RemoteTile({ feed }: { feed: RemoteFeed }) {
+// key "you" for the local participant, or the numeric feed id as a string.
+interface Participant {
+  key: string;
+  label: string;
+  stream: MediaStream | null;
+  muted: boolean;
+}
+
+// Deterministic hue per display name, so chat avatars/handles get a stable
+// colour (YouTube-style) without a lookup table.
+function hueFor(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+  return h;
+}
+
+// A single participant video used in the thumbnail strip. Binds the stream via
+// a ref so switching the spotlight never re-attaches the wrong srcObject.
+function Thumb({
+  participant,
+  onClick,
+}: {
+  participant: Participant;
+  onClick: () => void;
+}) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    if (ref.current) ref.current.srcObject = feed.stream;
-  }, [feed.stream]);
+    if (ref.current) ref.current.srcObject = participant.stream;
+  }, [participant.stream]);
   return (
-    <div className="tile">
-      <video ref={ref} autoPlay playsInline />
-      <span className="tile-label">{feed.display ?? `Feed ${feed.id}`}</span>
-    </div>
+    <button className="yt-thumb" onClick={onClick} title={`Spotlight ${participant.label}`}>
+      <video ref={ref} autoPlay playsInline muted={participant.muted} />
+      <span className="yt-tile-label">{participant.label}</span>
+    </button>
   );
 }
 
 export default function StagePage() {
-  const gridRef = useRef<HTMLDivElement>(null);
+  const stageElRef = useRef<HTMLDivElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
-  const localRef = useRef<HTMLVideoElement>(null);
+  const spotlightRef = useRef<HTMLVideoElement>(null);
   const sessionRef = useRef<JanusInstance | null>(null);
   const stageRef = useRef<StageHandle | null>(null);
   const chatRef = useRef<ChatHandle | null>(null);
@@ -44,7 +68,9 @@ export default function StagePage() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Enter a name and join the stage");
   const [error, setError] = useState<string | null>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [feeds, setFeeds] = useState<Map<number, RemoteFeed>>(new Map());
+  const [activeKey, setActiveKey] = useState("you");
   const [lines, setLines] = useState<ChatLine[]>([]);
   const [draft, setDraft] = useState("");
 
@@ -78,9 +104,7 @@ export default function StagePage() {
       sessionRef.current = session;
 
       stageRef.current = await joinStage(session, name || "Guest", {
-        onLocalStream: (stream) => {
-          if (localRef.current) localRef.current.srcObject = stream;
-        },
+        onLocalStream: setLocalStream,
         onRemoteFeed: upsertFeed,
         onFeedLeft: removeFeed,
         onStatus: setStatus,
@@ -111,8 +135,9 @@ export default function StagePage() {
     stageRef.current = null;
     sessionRef.current?.destroy();
     sessionRef.current = null;
-    if (localRef.current) localRef.current.srcObject = null;
+    setLocalStream(null);
     setFeeds(new Map());
+    setActiveKey("you");
     setJoined(false);
     setStatus("Left the stage");
   }, []);
@@ -127,6 +152,30 @@ export default function StagePage() {
   }, [draft]);
 
   const remoteFeeds = [...feeds.values()];
+  const participants: Participant[] = [
+    {
+      key: "you",
+      label: `You${name ? ` · ${name}` : ""}`,
+      stream: localStream,
+      muted: true,
+    },
+    ...remoteFeeds.map((f) => ({
+      key: String(f.id),
+      label: f.display ?? `Feed ${f.id}`,
+      stream: f.stream,
+      muted: false,
+    })),
+  ];
+  // Whoever is in the spotlight; fall back to "You" if the active feed just left.
+  const active =
+    participants.find((p) => p.key === activeKey) ?? participants[0];
+  const thumbs = participants.filter((p) => p.key !== active.key);
+  const count = participants.length;
+
+  // Bind the spotlight video to the active participant's stream.
+  useEffect(() => {
+    if (spotlightRef.current) spotlightRef.current.srcObject = active.stream;
+  }, [active.stream, active.key]);
 
   // Keep the chat pinned to the newest message as it grows.
   useEffect(() => {
@@ -135,78 +184,150 @@ export default function StagePage() {
   }, [lines]);
 
   return (
-    <main className="container" style={{ maxWidth: 1120 }}>
+    <main className="container yt-container">
       <AppHeader
         badge={
           <span className={`badge ${joined ? "live" : ""}`}>
-            {joined ? `● On stage · ${remoteFeeds.length + 1} live` : "Lobby"}
+            {joined ? `● Live · ${count}` : "Lobby"}
           </span>
         }
       />
 
-      <h1 className="page-head">Multi-Presenter Stage</h1>
-      <p className="lede" style={{ fontSize: 15, marginBottom: 20 }}>
-        Everyone publishes their own camera and subscribes to all others
-        (VideoRoom multistream), with live chat over a WebRTC data channel
-        (TextRoom). Open this page in several tabs to see the grid fill up.
-      </p>
-
-      {!joined && (
-        <div className="controls" style={{ marginBottom: 20 }}>
-          <input
-            className="text-input"
-            placeholder="Your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && join()}
-          />
-          <button className="primary" onClick={join} disabled={busy}>
-            {busy ? "Joining…" : "Join stage"}
-          </button>
+      {error && (
+        <div className="error" style={{ marginBottom: 12 }}>
+          {error}
         </div>
       )}
 
-      {error && <div className="error">{error}</div>}
-      <div className="status" style={{ marginBottom: 16 }}>
-        <span>{status}</span>
-      </div>
-
-      <div className="stage-layout">
-        <div className="grid" ref={gridRef}>
-          <div className="tile tile-you">
-            <video ref={localRef} autoPlay playsInline muted />
-            <span className="tile-label">
-              <i className="tile-dot" />
-              You{name ? ` · ${name}` : ""}
-            </span>
-          </div>
-          {remoteFeeds.map((feed) => (
-            <RemoteTile key={feed.id} feed={feed} />
-          ))}
-          {joined && remoteFeeds.length === 0 && (
-            <div className="tile tile-ghost">
-              <svg
-                className="tile-ghost-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <path d="M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1" />
-                <circle cx="9" cy="7.5" r="3.5" />
-                <path d="M22 19v-1a4 4 0 0 0-3-3.87M16.5 4a4 4 0 0 1 0 7" />
+      <div className="yt-live">
+        <div className="yt-main">
+          <div className="yt-stage" ref={stageElRef}>
+            <video
+              ref={spotlightRef}
+              autoPlay
+              playsInline
+              muted={active.muted}
+            />
+            {joined && <span className="yt-live-badge">● LIVE</span>}
+            <span className="yt-viewers">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
-              <strong>Just you so far</strong>
-              <span>Open this page in another tab or share the link to fill the stage.</span>
+              {count}
+            </span>
+            {active.key !== "you" && (
+              <span className="yt-spot-label">{active.label}</span>
+            )}
+            {!active.stream && (
+              <div className="video-placeholder">
+                <svg
+                  className="video-placeholder-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1" />
+                  <circle cx="9" cy="7.5" r="3.5" />
+                  <path d="M22 19v-1a4 4 0 0 0-3-3.87M16.5 4a4 4 0 0 1 0 7" />
+                </svg>
+                <strong>{joined ? "Starting your camera…" : "The stage is empty"}</strong>
+                <span>
+                  {joined
+                    ? "Your video will appear here in a moment."
+                    : "Enter a name and join to go on stage and start the live."}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {thumbs.length > 0 && (
+            <div className="yt-thumbs">
+              {thumbs.map((p) => (
+                <Thumb
+                  key={p.key}
+                  participant={p}
+                  onClick={() => setActiveKey(p.key)}
+                />
+              ))}
             </div>
           )}
+
+          <div className="yt-meta">
+            <h1 className="yt-title">Live on the Janus stage</h1>
+            <div className="yt-meta-row">
+              <div className="yt-channel">
+                <span className="yt-ch-avatar">JL</span>
+                <div className="yt-ch-info">
+                  <strong>Janus Live</strong>
+                  <span>2.5M subscribers</span>
+                </div>
+                <button className="yt-subscribe" type="button">
+                  Subscribe
+                </button>
+              </div>
+
+              <div className="yt-actions">
+                {/* Static YouTube-style affordances (visual only). */}
+                <span className="yt-pill yt-like">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3z" />
+                    <path d="M7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.1 6a2 2 0 0 1-2 1.7H7" />
+                  </svg>
+                  469
+                  <span className="yt-sep" />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M17 13V4h3a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-3z" />
+                    <path d="M17 13l-4 8a2 2 0 0 1-2-2v-4H5.5a2 2 0 0 1-2-2.3l1.1-6a2 2 0 0 1 2-1.7H17" />
+                  </svg>
+                </span>
+                <span className="yt-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+                    <path d="M16 6l-4-4-4 4" />
+                    <path d="M12 2v14" />
+                  </svg>
+                  Share
+                </span>
+                {joined ? (
+                  <>
+                    <TheaterButton targetRef={stageElRef} />
+                    <button className="danger" onClick={leave}>
+                      Leave
+                    </button>
+                  </>
+                ) : (
+                  <div className="yt-join">
+                    <input
+                      className="text-input"
+                      placeholder="Your name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && join()}
+                    />
+                    <button className="primary" onClick={join} disabled={busy}>
+                      {busy ? "Joining…" : "Join"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="status" style={{ marginTop: 10 }}>
+              <span>{status}</span>
+            </div>
+          </div>
         </div>
 
-        <aside className="chat">
-          <div className="chat-log" ref={logRef}>
+        <aside className="yt-chat">
+          <div className="yt-chat-head">
+            <span>Live chat</span>
+            <span className="yt-chat-count">{count} here</span>
+          </div>
+          <div className="yt-chat-log" ref={logRef}>
             {lines.length === 0 && (
               <div className="chat-empty">
                 <svg
@@ -226,24 +347,34 @@ export default function StagePage() {
             )}
             {lines.map((line, i) =>
               line.kind === "system" ? (
-                <div key={i} className="chat-system">
+                <div key={i} className="yt-msg-sys">
                   {line.text}
                 </div>
               ) : (
-                <div
-                  key={i}
-                  className={`chat-msg${line.data.own ? " own" : ""}`}
-                >
-                  <span className="chat-from">{line.data.from}</span>
-                  <span className="chat-text">{line.data.text}</span>
+                <div key={i} className={`yt-msg${line.data.own ? " own" : ""}`}>
+                  <span
+                    className="yt-msg-av"
+                    style={{ background: `hsl(${hueFor(line.data.from)} 52% 42%)` }}
+                  >
+                    {line.data.from.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="yt-msg-body">
+                    <span
+                      className="yt-msg-name"
+                      style={{ color: `hsl(${hueFor(line.data.from)} 70% 72%)` }}
+                    >
+                      {line.data.from}
+                    </span>
+                    <span className="yt-msg-text">{line.data.text}</span>
+                  </span>
                 </div>
               )
             )}
           </div>
-          <div className="chat-input">
+          <div className="yt-chat-input">
             <input
               className="text-input"
-              placeholder={joined ? "Message…" : "Join to chat"}
+              placeholder={joined ? "Chat…" : "Join to chat"}
               value={draft}
               disabled={!joined}
               onChange={(e) => setDraft(e.target.value)}
@@ -255,15 +386,6 @@ export default function StagePage() {
           </div>
         </aside>
       </div>
-
-      {joined && (
-        <div className="controls" style={{ marginTop: 20 }}>
-          <button className="danger" onClick={leave}>
-            Leave stage
-          </button>
-          <TheaterButton targetRef={gridRef} />
-        </div>
-      )}
     </main>
   );
 }

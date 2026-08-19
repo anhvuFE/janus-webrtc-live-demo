@@ -13,12 +13,14 @@ import {
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
 import { FilterPanel } from "@/components/FilterPanel";
+import { useDisplayName } from "@/lib/identity";
 
 export default function PresentPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   // The session (and its FX pipeline) lives outside React
   // (lib/presenter-session) so it survives navigation to another tab — we only
   // mirror its state here.
+  const [displayName, setDisplayName] = useDisplayName();
   const { live, busy, status, error, stream, settings, recording } =
     useSyncExternalStore(
       subscribePresenter,
@@ -87,6 +89,16 @@ export default function PresentPage() {
       {error && <div className="error">{error}</div>}
 
       <div className="controls">
+        {!live && (
+          <input
+            className="text-input"
+            style={{ maxWidth: 220 }}
+            placeholder="Your name"
+            value={displayName}
+            maxLength={40}
+            onChange={(e) => setDisplayName(e.target.value)}
+          />
+        )}
         {!live ? (
           <button className="primary" onClick={startPresenter} disabled={busy}>
             {busy ? "Starting…" : "Go live"}

@@ -29,6 +29,7 @@ export default function WatchPage() {
   // Poll "who's live" so we can tell the viewer a presenter is on before they join.
   const liveStatus = useLiveStatus();
   const presenterLive = liveStatus?.broadcast.live ?? false;
+  const presenterName = liveStatus?.broadcast.display?.trim();
 
   const join = useCallback(async () => {
     setError(null);
@@ -82,7 +83,7 @@ export default function WatchPage() {
             {watching
               ? "● Watching"
               : presenterLive
-              ? "● Presenter live"
+              ? `● ${presenterName || "Presenter"} live`
               : "Idle"}
           </span>
         }
@@ -105,7 +106,11 @@ export default function WatchPage() {
               <rect x="2.5" y="4" width="19" height="13" rx="2" />
               <path d="M8 21h8M12 17.5V21" />
             </svg>
-            <strong>{presenterLive ? "A presenter is live" : "No stream yet"}</strong>
+            <strong>
+              {presenterLive
+                ? `${presenterName || "A presenter"} is live`
+                : "No stream yet"}
+            </strong>
             <span>
               {presenterLive
                 ? "Hit “Watch live” to join the WebRTC feed."

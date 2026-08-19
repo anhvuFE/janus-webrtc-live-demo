@@ -96,7 +96,9 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000. `npm run dev` uses Turbopack for fast on-demand
+route compilation (no per-navigation stutter); use `npm run dev:webpack` to fall
+back to the Webpack dev server if needed.
 
 **3. Try each path**
 

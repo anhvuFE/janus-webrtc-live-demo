@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 
@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: "Janus WebRTC Live Demo",
   description:
     "1-to-many live streaming with Janus VideoRoom, WebRTC and coturn.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#070912",
 };
 
 export default function RootLayout({

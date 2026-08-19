@@ -4,7 +4,7 @@
 //
 // Docs: https://janus.conf.meetecho.com/docs/videoroom.html (multistream)
 
-import { JANUS_ROOM } from "./config";
+import { JANUS_STAGE_ROOM } from "./config";
 import type { JanusInstance, JanusPluginHandle } from "./janus-types";
 
 const VIDEOROOM = "janus.plugin.videoroom";
@@ -133,7 +133,7 @@ export async function joinStage(
         h.send({
           message: {
             request: "join",
-            room: JANUS_ROOM,
+            room: JANUS_STAGE_ROOM,
             ptype: "subscriber",
             private_id: privateId,
             streams,
@@ -166,7 +166,7 @@ export async function joinStage(
             tracks: [{ type: "data" }],
             success: (answer: unknown) => {
               subHandle.send({
-                message: { request: "start", room: JANUS_ROOM },
+                message: { request: "start", room: JANUS_STAGE_ROOM },
                 jsep: answer,
               });
             },
@@ -201,7 +201,7 @@ export async function joinStage(
         h.send({
           message: {
             request: "join",
-            room: JANUS_ROOM,
+            room: JANUS_STAGE_ROOM,
             ptype: "publisher",
             display,
           },

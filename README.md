@@ -36,9 +36,9 @@ paths** side by side:
 
 | Route | Path | What it does |
 | --- | --- | --- |
-| `/present` | Janus | Publish your camera to the Janus room (1-to-many). |
-| `/watch` | Janus | Subscribe to the active presenter's live WebRTC feed. |
-| `/stage` | Janus | Multi-presenter grid (VideoRoom multistream) + live chat (TextRoom). |
+| `/present` | Janus | Publish your camera to the **broadcast** room (1-to-many). |
+| `/watch` | Janus | Subscribe to the active presenter in the broadcast room. |
+| `/stage` | Janus | Multi-presenter grid + chat in a **separate stage** room (VideoRoom multistream + TextRoom). |
 | `/broadcast` | MediaMTX | Ingest your camera via WHIP; MediaMTX remuxes to LL-HLS. |
 | `/hls` | MediaMTX | Play the buffered Low-Latency HLS stream (hls.js). |
 | `/recordings` | MediaMTX | Browse & play sessions recorded server-side as fMP4. |
@@ -128,7 +128,8 @@ Client env vars (`web/.env.local`):
 | Var | Default | Meaning |
 | --- | --- | --- |
 | `NEXT_PUBLIC_JANUS_WS` | `ws://localhost:8188` | Janus WebSocket endpoint |
-| `NEXT_PUBLIC_JANUS_ROOM` | `1234` | VideoRoom / TextRoom id |
+| `NEXT_PUBLIC_JANUS_ROOM` | `1234` | Broadcast VideoRoom id (/present, /watch) |
+| `NEXT_PUBLIC_JANUS_STAGE_ROOM` | `1235` | Stage VideoRoom + TextRoom id (/stage) |
 | `NEXT_PUBLIC_TURN_URL` | _(empty)_ | e.g. `turn:localhost:3478` — enable TURN |
 | `NEXT_PUBLIC_TURN_USER` / `_PASS` | `januswebrtc` / `demo-turn-secret` | TURN creds |
 | `NEXT_PUBLIC_MEDIAMTX_STREAM` | `live` | Stream name shared by WHIP + HLS |

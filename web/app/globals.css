@@ -1,16 +1,16 @@
 :root {
-  --bg: #08080e;
-  --panel: rgba(22, 20, 33, 0.55);
-  --panel-solid: #141220;
-  --border: rgba(255, 255, 255, 0.09);
+  --bg: #070912;
+  --panel: rgba(18, 22, 36, 0.55);
+  --panel-solid: #11141f;
+  --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
-  --text: #f5f3fa;
-  --muted: #a7a2bd;
-  --accent: #d946ef; /* fuchsia */
-  --accent-2: #8b5cf6; /* violet */
+  --text: #eef1fb;
+  --muted: #98a1be;
+  --accent: #818cf8; /* indigo */
+  --accent-2: #22d3ee; /* cyan */
   --ok: #34d399;
-  --grad: linear-gradient(135deg, #f21ec9 0%, #8b5cf6 100%);
-  --grad-soft: linear-gradient(135deg, rgba(242, 30, 201, 0.16), rgba(139, 92, 246, 0.16));
+  --grad: linear-gradient(135deg, #6366f1 0%, #22d3ee 100%);
+  --grad-soft: linear-gradient(135deg, rgba(99, 102, 241, 0.16), rgba(34, 211, 238, 0.14));
 }
 
 * {
@@ -35,10 +35,10 @@ body::before {
   inset: -25%;
   z-index: -2;
   background:
-    radial-gradient(38% 55% at 18% 28%, rgba(242, 30, 201, 0.42), transparent 60%),
-    radial-gradient(34% 48% at 82% 18%, rgba(249, 115, 22, 0.3), transparent 60%),
-    radial-gradient(46% 55% at 72% 72%, rgba(139, 92, 246, 0.42), transparent 62%),
-    radial-gradient(40% 50% at 28% 82%, rgba(20, 184, 166, 0.26), transparent 60%);
+    radial-gradient(38% 55% at 18% 28%, rgba(99, 102, 241, 0.40), transparent 60%),
+    radial-gradient(34% 48% at 82% 18%, rgba(56, 189, 248, 0.28), transparent 60%),
+    radial-gradient(46% 55% at 72% 72%, rgba(34, 211, 238, 0.34), transparent 62%),
+    radial-gradient(40% 50% at 28% 82%, rgba(59, 130, 246, 0.24), transparent 60%);
   filter: blur(70px);
   transform: rotate(-12deg) scale(1.25);
 }
@@ -1570,8 +1570,9 @@ button:disabled {
 }
 
 .app-nav a.active {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+  background: var(--grad-soft);
+  box-shadow: inset 0 0 0 1px rgba(129, 140, 248, 0.35);
 }
 
 .app-header-right {
@@ -1697,6 +1698,101 @@ button:disabled {
   color: var(--muted);
   font-size: 14px;
   margin: 0 0 20px;
+}
+
+/* ---------- Page hero (top-of-page chrome) ---------- */
+
+.page-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px;
+  margin: 0 0 28px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--grad-soft), var(--panel);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+/* soft brand glow bleeding from behind the icon */
+.page-hero::before {
+  content: "";
+  position: absolute;
+  left: -40px;
+  top: -60px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.22), transparent 70%);
+  pointer-events: none;
+}
+
+.page-hero-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 14px;
+  background: var(--grad);
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(34, 211, 238, 0.28);
+}
+
+.page-hero-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.page-hero-body {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.page-hero-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  margin-bottom: 6px;
+}
+
+.page-hero-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.page-hero-sub {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 62ch;
+}
+
+.page-hero-badge {
+  position: relative;
+  flex: none;
+  align-self: flex-start;
+}
+
+@media (max-width: 640px) {
+  .page-hero {
+    flex-wrap: wrap;
+    padding: 18px;
+  }
+  .page-hero-badge {
+    order: 3;
+  }
 }
 
 video {
@@ -2006,10 +2102,6 @@ video {
 }
 
 /* ---------- YouTube-style live room (stage) ---------- */
-
-.yt-container {
-  max-width: 1280px;
-}
 
 .yt-live {
   display: grid;

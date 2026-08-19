@@ -11,6 +11,7 @@ import {
   subscribePresenter,
 } from "@/lib/presenter-session";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHero } from "@/components/PageHero";
 import { FilterPanel } from "@/components/FilterPanel";
 
 export default function PresentPage() {
@@ -40,19 +41,19 @@ export default function PresentPage() {
 
   return (
     <main className="container">
-      <AppHeader
+      <AppHeader />
+
+      <PageHero
+        icon="camera"
+        eyebrow="Live studio"
+        title="Presenter"
+        subtitle="Publish your camera to the Janus room — viewers watch on /watch. Your broadcast keeps running if you switch to another tab."
         badge={
           <span className={`badge ${live ? "live" : ""}`}>
             {live ? "● Live" : "Offline"}
           </span>
         }
       />
-
-      <h1 className="page-head">Presenter</h1>
-      <p className="page-sub">
-        Publish your camera to the Janus room — viewers watch on /watch. Your
-        broadcast keeps running if you switch to another tab.
-      </p>
 
       <div className="video-wrap">
         <video ref={videoRef} autoPlay playsInline muted />

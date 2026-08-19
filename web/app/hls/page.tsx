@@ -9,6 +9,7 @@ import { StatsHud } from "@/components/StatsHud";
 import { Watermark } from "@/components/Watermark";
 import { TheaterButton } from "@/components/TheaterButton";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHero } from "@/components/PageHero";
 import { viewerTag } from "@/lib/viewer";
 
 export default function HlsPage() {
@@ -84,23 +85,28 @@ export default function HlsPage() {
 
   return (
     <main className="container">
-      <AppHeader
+      <AppHeader />
+
+      <PageHero
+        icon="play"
+        eyebrow="Buffered egress"
+        title="LL-HLS Player"
+        subtitle={
+          <>
+            Buffered Low-Latency HLS remuxed by MediaMTX. Start{" "}
+            <Link href="/broadcast" style={{ color: "var(--accent-2)" }}>
+              /broadcast
+            </Link>{" "}
+            first. Expect a second or two of latency vs. raw WebRTC — the trade
+            for a scalable, CDN-friendly egress.
+          </>
+        }
         badge={
           <span className={`badge ${playing ? "live" : ""}`}>
             {playing ? "● Playing" : "Idle"}
           </span>
         }
       />
-
-      <h1 className="page-head">LL-HLS Player</h1>
-      <p className="lede" style={{ fontSize: 15, marginBottom: 20 }}>
-        Buffered Low-Latency HLS remuxed by MediaMTX. Start{" "}
-        <Link href="/broadcast" style={{ color: "var(--accent-2)" }}>
-          /broadcast
-        </Link>{" "}
-        first. Expect a second or two of latency vs. raw WebRTC — the trade for a
-        scalable, CDN-friendly egress.
-      </p>
 
       <div className="video-wrap" ref={wrapRef}>
         <video ref={videoRef} controls playsInline />

@@ -8,6 +8,8 @@
 
 import { createSession, ensureJanus, startPublishing } from "./janus-client";
 import type { JanusInstance } from "./janus-types";
+import { DEFAULT_FX, type FxSettings } from "./fx-presets";
+import { VideoFx } from "./video-fx";
 
 export interface PresenterState {
   live: boolean;
@@ -15,6 +17,7 @@ export interface PresenterState {
   status: string;
   error: string | null;
   stream: MediaStream | null;
+  settings: FxSettings;
 }
 
 const INITIAL: PresenterState = {
@@ -23,11 +26,15 @@ const INITIAL: PresenterState = {
   status: "Ready to go live",
   error: null,
   stream: null,
+  settings: DEFAULT_FX,
 };
 
 let state: PresenterState = INITIAL;
 let session: JanusInstance | null = null;
 let stopFn: (() => void) | null = null;
+// The FX pipeline lives here too so filters survive navigation with the stream.
+let fx: VideoFx | null = null;
+let rawStream: MediaStream | null = null;
 
 const listeners = new Set<() => void>();
 
@@ -52,8 +59,20 @@ export function subscribePresenter(listener: () => void): () => void {
 /** Go live (no-op if already live or mid-connect). */
 export async function startPresenter(): Promise<void> {
   if (state.live || state.busy) return;
-  setState({ busy: true, error: null, status: "Connecting to Janus…" });
+  setState({ busy: true, error: null, status: "Requesting camera…" });
   try {
+    const raw = await navigator.mediaDevices.getUserMedia({
+      video: { frameRate: { ideal: 30 }, width: { ideal: 1280 } },
+      audio: true,
+    });
+    rawStream = raw;
+
+    // Run the raw camera through the FX pipeline and publish the processed
+    // canvas stream instead of the camera itself.
+    fx = new VideoFx(raw, state.settings, (m) => setState({ error: m }));
+    const processed = await fx.start();
+    setState({ stream: processed, status: "Connecting to Janus…" });
+
     await ensureJanus();
     const s = await createSession();
     session = s;
@@ -61,18 +80,15 @@ export async function startPresenter(): Promise<void> {
       s,
       `Presenter-${Math.floor(Math.random() * 1000)}`,
       {
-        onLocalStream: (stream) => setState({ stream }),
         onStatus: (status) => setState({ status }),
         onError: (error) => setState({ error }),
-      }
+      },
+      processed
     );
     setState({ live: true, busy: false });
   } catch (e) {
-    // Roll back any partial session so we don't leak a handle.
-    stopFn?.();
-    stopFn = null;
-    session?.destroy();
-    session = null;
+    // Roll back any partial session so we don't leak a handle or camera.
+    teardown();
     setState({
       busy: false,
       live: false,
@@ -85,9 +101,24 @@ export async function startPresenter(): Promise<void> {
 
 /** Tear down the live broadcast. Safe to call when idle. */
 export function stopPresenter(): void {
+  teardown();
+  setState({ live: false, stream: null, status: "Stopped" });
+}
+
+/** Update the live FX settings; pushes into the running pipeline if any. */
+export function setPresenterFx(settings: FxSettings): void {
+  fx?.update(settings);
+  setState({ settings });
+}
+
+// Release the Janus session, FX pipeline and camera. Idempotent.
+function teardown(): void {
   stopFn?.();
   stopFn = null;
   session?.destroy();
   session = null;
-  setState({ live: false, stream: null, status: "Stopped" });
+  fx?.stop();
+  fx = null;
+  rawStream?.getTracks().forEach((t) => t.stop());
+  rawStream = null;
 }

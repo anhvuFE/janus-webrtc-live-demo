@@ -72,9 +72,14 @@ export interface PublisherCallbacks {
 export async function startPublishing(
   session: JanusInstance,
   display: string,
-  cb: PublisherCallbacks
+  cb: PublisherCallbacks,
+  // Optional pre-built stream (e.g. the FX-processed canvas stream). When given,
+  // Janus captures these exact tracks instead of grabbing the raw camera itself.
+  stream?: MediaStream
 ): Promise<() => void> {
   const localStream = new MediaStream();
+  const captureAudio = stream?.getAudioTracks()[0] ?? true;
+  const captureVideo = stream?.getVideoTracks()[0] ?? true;
 
   return new Promise((resolve, reject) => {
     let handle: JanusPluginHandle = null;
@@ -117,8 +122,8 @@ export async function startPublishing(
           cb.onStatus?.("Joined — starting camera…");
           handle.createOffer({
             tracks: [
-              { type: "audio", capture: true, recv: false },
-              { type: "video", capture: true, recv: false },
+              { type: "audio", capture: captureAudio, recv: false },
+              { type: "video", capture: captureVideo, recv: false },
             ],
             success: (offer: unknown) => {
               handle.send({

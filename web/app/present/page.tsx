@@ -3,17 +3,20 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import {
   getPresenterState,
+  setPresenterFx,
   startPresenter,
   stopPresenter,
   subscribePresenter,
 } from "@/lib/presenter-session";
 import { AppHeader } from "@/components/AppHeader";
+import { FilterPanel } from "@/components/FilterPanel";
 
 export default function PresentPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  // The session lives outside React (lib/presenter-session) so it survives
-  // navigation to another tab — we only mirror its state here.
-  const { live, busy, status, error, stream } = useSyncExternalStore(
+  // The session (and its FX pipeline) lives outside React
+  // (lib/presenter-session) so it survives navigation to another tab — we only
+  // mirror its state here.
+  const { live, busy, status, error, stream, settings } = useSyncExternalStore(
     subscribePresenter,
     getPresenterState,
     getPresenterState
@@ -82,6 +85,8 @@ export default function PresentPage() {
           </button>
         )}
       </div>
+
+      <FilterPanel settings={settings} onChange={setPresenterFx} />
     </main>
   );
 }

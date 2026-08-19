@@ -8,12 +8,18 @@ import { makeWebrtcOutboundSampler } from "@/lib/hud-samplers";
 import { StatsHud } from "@/components/StatsHud";
 import { Watermark } from "@/components/Watermark";
 import { AppHeader } from "@/components/AppHeader";
+import { FilterPanel } from "@/components/FilterPanel";
+import { useVideoFx } from "@/lib/use-video-fx";
 
 type Source = "camera" | "screen";
 
 export default function BroadcastPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sessionRef = useRef<WhipSession | null>(null);
+  const rawRef = useRef<MediaStream | null>(null);
+  const { settings, setSettings, attach, release } = useVideoFx((m) =>
+    setError(m)
+  );
 
   const [source, setSource] = useState<Source>("camera");
   const [live, setLive] = useState(false);
@@ -42,7 +48,13 @@ export default function BroadcastPage() {
               video: { frameRate: { ideal: 60 }, width: { ideal: 1920 } },
               audio: true,
             });
-      if (videoRef.current) videoRef.current.srcObject = stream;
+      rawRef.current = stream;
+
+      // Apply the FX pipeline for camera captures (colour, beauty, virtual
+      // background, AR accessories). Screen shares publish raw.
+      const outgoing =
+        source === "camera" ? await attach(stream) : stream;
+      if (videoRef.current) videoRef.current.srcObject = outgoing;
 
       // If the user stops sharing from the browser UI, tear down cleanly.
       // Listen on every video track so audio-only/multi-track captures still fire.
@@ -51,7 +63,7 @@ export default function BroadcastPage() {
         .forEach((t) => t.addEventListener("ended", () => void stop()));
 
       setStatus(`WHIP ingest → ${whipEndpoint()}`);
-      sessionRef.current = await whipPublish(whipEndpoint(), stream);
+      sessionRef.current = await whipPublish(whipEndpoint(), outgoing);
       setLive(true);
       setStatus(
         `Ingesting "${MEDIAMTX_STREAM}" (${source}) — remuxing to LL-HLS`
@@ -68,10 +80,13 @@ export default function BroadcastPage() {
   const stop = useCallback(async () => {
     await sessionRef.current?.stop();
     sessionRef.current = null;
+    release();
+    rawRef.current?.getTracks().forEach((t) => t.stop());
+    rawRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
     setLive(false);
     setStatus("Stopped");
-  }, []);
+  }, [release]);
 
   useEffect(() => {
     return () => {
@@ -168,6 +183,10 @@ export default function BroadcastPage() {
           </button>
         )}
       </div>
+
+      {source === "camera" && (
+        <FilterPanel settings={settings} onChange={setSettings} />
+      )}
     </main>
   );
 }

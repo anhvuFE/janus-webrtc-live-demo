@@ -13,6 +13,8 @@ import { joinChat, type ChatHandle, type ChatMessage } from "@/lib/textroom";
 import type { JanusInstance } from "@/lib/janus-types";
 import { TheaterButton } from "@/components/TheaterButton";
 import { AppHeader } from "@/components/AppHeader";
+import { FilterPanel } from "@/components/FilterPanel";
+import { useVideoFx } from "@/lib/use-video-fx";
 
 type ChatLine =
   | { kind: "msg"; data: ChatMessage }
@@ -62,6 +64,10 @@ export default function StagePage() {
   const sessionRef = useRef<JanusInstance | null>(null);
   const stageRef = useRef<StageHandle | null>(null);
   const chatRef = useRef<ChatHandle | null>(null);
+  const rawRef = useRef<MediaStream | null>(null);
+  const { settings, setSettings, attach, release } = useVideoFx((m) =>
+    setError(m)
+  );
 
   const [name, setName] = useState("");
   const [joined, setJoined] = useState(false);
@@ -99,17 +105,31 @@ export default function StagePage() {
     setError(null);
     setBusy(true);
     try {
+      const raw = await navigator.mediaDevices.getUserMedia({
+        video: { frameRate: { ideal: 30 }, width: { ideal: 1280 } },
+        audio: true,
+      });
+      rawRef.current = raw;
+      // Run the raw camera through the FX pipeline; preview + publish the
+      // processed canvas stream (it drives the local "you" participant tile).
+      const processed = await attach(raw);
+      setLocalStream(processed);
+
       await ensureJanus();
       const session = await createSession();
       sessionRef.current = session;
 
-      stageRef.current = await joinStage(session, name || "Guest", {
-        onLocalStream: setLocalStream,
-        onRemoteFeed: upsertFeed,
-        onFeedLeft: removeFeed,
-        onStatus: setStatus,
-        onError: setError,
-      });
+      stageRef.current = await joinStage(
+        session,
+        name || "Guest",
+        {
+          onRemoteFeed: upsertFeed,
+          onFeedLeft: removeFeed,
+          onStatus: setStatus,
+          onError: setError,
+        },
+        processed
+      );
 
       chatRef.current = await joinChat(session, username, name || "Guest", {
         onMessage: (m) =>
@@ -135,12 +155,15 @@ export default function StagePage() {
     stageRef.current = null;
     sessionRef.current?.destroy();
     sessionRef.current = null;
+    release();
+    rawRef.current?.getTracks().forEach((t) => t.stop());
+    rawRef.current = null;
     setLocalStream(null);
     setFeeds(new Map());
     setActiveKey("you");
     setJoined(false);
     setStatus("Left the stage");
-  }, []);
+  }, [release]);
 
   useEffect(() => () => leave(), [leave]);
 
@@ -386,6 +409,8 @@ export default function StagePage() {
           </div>
         </aside>
       </div>
+
+      <FilterPanel settings={settings} onChange={setSettings} />
     </main>
   );
 }

@@ -6,6 +6,7 @@ import type { RecordingEntry } from "@/lib/recordings";
 import { NotesPanel } from "@/components/NotesPanel";
 import { TheaterButton } from "@/components/TheaterButton";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHero } from "@/components/PageHero";
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -45,23 +46,28 @@ export default function RecordingsPage() {
 
   return (
     <main className="container">
-      <AppHeader
+      <AppHeader />
+
+      <PageHero
+        icon="film"
+        eyebrow="Archive"
+        title="Recordings"
+        subtitle={
+          <>
+            Every{" "}
+            <Link href="/broadcast" style={{ color: "var(--accent-2)" }}>
+              WHIP broadcast
+            </Link>{" "}
+            is archived server-side by MediaMTX as fragmented MP4. Files appear
+            here once a session ends.
+          </>
+        }
         badge={
           <button onClick={load} disabled={loading}>
             {loading ? "Refreshing…" : "Refresh"}
           </button>
         }
       />
-
-      <h1 className="page-head">Recordings</h1>
-      <p className="lede" style={{ fontSize: 15, marginBottom: 20 }}>
-        Every{" "}
-        <Link href="/broadcast" style={{ color: "var(--accent-2)" }}>
-          WHIP broadcast
-        </Link>{" "}
-        is archived server-side by MediaMTX as fragmented MP4. Files appear here
-        once a session ends.
-      </p>
 
       {error && <div className="error">{error}</div>}
 

@@ -10,6 +10,7 @@ import type { JanusInstance } from "@/lib/janus-types";
 import { Watermark } from "@/components/Watermark";
 import { TheaterButton } from "@/components/TheaterButton";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHero } from "@/components/PageHero";
 import { viewerTag } from "@/lib/viewer";
 
 export default function WatchPage() {
@@ -64,18 +65,19 @@ export default function WatchPage() {
 
   return (
     <main className="container">
-      <AppHeader
+      <AppHeader />
+
+      <PageHero
+        icon="eye"
+        eyebrow="Live viewer"
+        title="Viewer"
+        subtitle="Subscribe to the active presenter's live WebRTC feed."
         badge={
           <span className={`badge ${watching ? "live" : ""}`}>
             {watching ? "● Watching" : "Idle"}
           </span>
         }
       />
-
-      <h1 className="page-head">Viewer</h1>
-      <p className="page-sub">
-        Subscribe to the active presenter&apos;s live WebRTC feed.
-      </p>
 
       <div className="video-wrap" ref={wrapRef}>
         <video ref={videoRef} autoPlay playsInline />

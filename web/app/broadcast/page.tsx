@@ -8,6 +8,7 @@ import { makeWebrtcOutboundSampler } from "@/lib/hud-samplers";
 import { StatsHud } from "@/components/StatsHud";
 import { Watermark } from "@/components/Watermark";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHero } from "@/components/PageHero";
 import { FilterPanel } from "@/components/FilterPanel";
 import { useVideoFx } from "@/lib/use-video-fx";
 
@@ -96,23 +97,29 @@ export default function BroadcastPage() {
 
   return (
     <main className="container">
-      <AppHeader
+      <AppHeader />
+
+      <PageHero
+        icon="broadcast"
+        eyebrow="WHIP ingest"
+        title="WHIP Broadcaster"
+        subtitle={
+          <>
+            Presenter-style ingest — push your camera{" "}
+            <em>or a screen/app window</em> into MediaMTX over WHIP; it remuxes
+            to Low-Latency HLS. Watch on{" "}
+            <Link href="/hls" style={{ color: "var(--accent-2)" }}>
+              /hls
+            </Link>
+            .
+          </>
+        }
         badge={
           <span className={`badge ${live ? "live" : ""}`}>
             {live ? "● Ingesting" : "Offline"}
           </span>
         }
       />
-
-      <h1 className="page-head">WHIP Broadcaster</h1>
-      <p className="lede" style={{ fontSize: 15, marginBottom: 20 }}>
-        Presenter-style ingest — push your camera <em>or a screen/app window</em>{" "}
-        into MediaMTX over WHIP; it remuxes to Low-Latency HLS. Watch on{" "}
-        <Link href="/hls" style={{ color: "var(--accent-2)" }}>
-          /hls
-        </Link>
-        .
-      </p>
 
       {!live && (
         <div className="seg" role="tablist" aria-label="Capture source">

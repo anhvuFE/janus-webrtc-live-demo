@@ -13,6 +13,7 @@ import { joinChat, type ChatHandle, type ChatMessage } from "@/lib/textroom";
 import type { JanusInstance } from "@/lib/janus-types";
 import { TheaterButton } from "@/components/TheaterButton";
 import { AppHeader } from "@/components/AppHeader";
+import { PageHero } from "@/components/PageHero";
 import { FilterPanel } from "@/components/FilterPanel";
 import { useVideoFx } from "@/lib/use-video-fx";
 
@@ -207,8 +208,14 @@ export default function StagePage() {
   }, [lines]);
 
   return (
-    <main className="container yt-container">
-      <AppHeader
+    <main className="container">
+      <AppHeader />
+
+      <PageHero
+        icon="users"
+        eyebrow="Live room"
+        title="Stage"
+        subtitle="Join the multi-party room — everyone shares camera + chat, YouTube-Live style."
         badge={
           <span className={`badge ${joined ? "live" : ""}`}>
             {joined ? `● Live · ${count}` : "Lobby"}

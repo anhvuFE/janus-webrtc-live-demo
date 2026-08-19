@@ -10,6 +10,7 @@ import { createSession, ensureJanus, startPublishing } from "./janus-client";
 import type { JanusInstance } from "./janus-types";
 import { DEFAULT_FX, type FxSettings } from "./fx-presets";
 import { VideoFx } from "./video-fx";
+import { getDisplayName } from "./identity";
 
 export interface PresenterState {
   live: boolean;
@@ -119,7 +120,7 @@ export async function startPresenter(): Promise<void> {
     session = s;
     stopFn = await startPublishing(
       s,
-      `Presenter-${Math.floor(Math.random() * 1000)}`,
+      getDisplayName() || `Presenter-${Math.floor(Math.random() * 1000)}`,
       {
         onStatus: (status) => setState({ status }),
         onError: (error) => setState({ error }),

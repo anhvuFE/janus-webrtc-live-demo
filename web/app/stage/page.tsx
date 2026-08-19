@@ -16,6 +16,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
 import { FilterPanel } from "@/components/FilterPanel";
 import { useVideoFx } from "@/lib/use-video-fx";
+import { useDisplayName } from "@/lib/identity";
 
 type ChatLine =
   | { kind: "msg"; data: ChatMessage }
@@ -70,7 +71,7 @@ export default function StagePage() {
     setError(m)
   );
 
-  const [name, setName] = useState("");
+  const [name, setName] = useDisplayName();
   const [joined, setJoined] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Enter a name and join the stage");

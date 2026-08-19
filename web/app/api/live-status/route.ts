@@ -12,13 +12,15 @@ const JANUS_HTTP = process.env.JANUS_HTTP ?? "http://localhost:8088/janus";
 const CACHE_TTL = 2000;
 
 export interface LiveStatus {
-  broadcast: { live: boolean; publishers: number };
+  broadcast: { live: boolean; publishers: number; display?: string };
   buffered: { live: boolean };
 }
 
 interface JanusResp {
   data?: { id?: number };
-  plugindata?: { data?: { participants?: Array<{ publisher?: boolean }> } };
+  plugindata?: {
+    data?: { participants?: Array<{ publisher?: boolean; display?: string }> };
+  };
 }
 
 let cache: { at: number; data: LiveStatus } | null = null;
@@ -37,7 +39,11 @@ async function postJanus(url: string, body: object): Promise<JanusResp> {
 }
 
 // Create a throwaway session, list the broadcast room's participants, destroy.
-async function broadcastLive(): Promise<{ live: boolean; publishers: number }> {
+async function broadcastLive(): Promise<{
+  live: boolean;
+  publishers: number;
+  display?: string;
+}> {
   const created = await postJanus(JANUS_HTTP, {
     janus: "create",
     transaction: tx(),
@@ -57,8 +63,8 @@ async function broadcastLive(): Promise<{ live: boolean; publishers: number }> {
       body: { request: "listparticipants", room: JANUS_ROOM },
     });
     const participants = listed.plugindata?.data?.participants ?? [];
-    const publishers = participants.filter((p) => p.publisher).length;
-    return { live: publishers > 0, publishers };
+    const pubs = participants.filter((p) => p.publisher);
+    return { live: pubs.length > 0, publishers: pubs.length, display: pubs[0]?.display };
   } finally {
     await postJanus(`${JANUS_HTTP}/${sessionId}`, {
       janus: "destroy",

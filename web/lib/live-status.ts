@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 export interface LiveStatus {
-  broadcast: { live: boolean; publishers: number };
+  broadcast: { live: boolean; publishers: number; display?: string };
   buffered: { live: boolean };
 }
 

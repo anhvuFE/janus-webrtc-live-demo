@@ -35,6 +35,30 @@ const FOREHEAD = 10;
 const PHILTRUM = 164; // just below the nose
 const NOSE_TIP = 1; // tip of the nose
 
+// MediaPipe's TFLite WASM prints benign INFO lines (e.g. "INFO: Created
+// TensorFlow Lite XNNPACK delegate for CPU.") through console.error, which trips
+// the Next.js dev error overlay as if the app had crashed. Drop just those
+// known-benign lines; every real error still passes through. Installed once.
+let mpLogsSilenced = false;
+function silenceMediaPipeLogs() {
+  if (mpLogsSilenced || typeof window === "undefined") return;
+  mpLogsSilenced = true;
+  const BENIGN = [
+    "Created TensorFlow Lite XNNPACK delegate for CPU",
+    "GL version",
+    "OpenGL error checking is disabled",
+    "feedback tensors",
+  ];
+  const original = console.error.bind(console);
+  console.error = (...args: unknown[]) => {
+    const first = args[0];
+    if (typeof first === "string" && BENIGN.some((b) => first.includes(b))) {
+      return;
+    }
+    original(...(args as []));
+  };
+}
+
 export class VideoFx {
   private source: MediaStream;
   private video: HTMLVideoElement;
@@ -139,6 +163,7 @@ export class VideoFx {
 
   private async loadSegmenter() {
     try {
+      silenceMediaPipeLogs();
       const vision = await import("@mediapipe/tasks-vision");
       const fileset = await vision.FilesetResolver.forVisionTasks(WASM_BASE);
       this.segmenter = await vision.ImageSegmenter.createFromOptions(fileset, {
@@ -155,6 +180,7 @@ export class VideoFx {
 
   private async loadFace() {
     try {
+      silenceMediaPipeLogs();
       const vision = await import("@mediapipe/tasks-vision");
       const fileset = await vision.FilesetResolver.forVisionTasks(WASM_BASE);
       this.faceLm = await vision.FaceLandmarker.createFromOptions(fileset, {

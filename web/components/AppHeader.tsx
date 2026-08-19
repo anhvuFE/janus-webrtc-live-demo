@@ -8,6 +8,7 @@ import {
   stopPresenter,
   subscribePresenter,
 } from "@/lib/presenter-session";
+import { BrandGlyph } from "@/components/BrandGlyph";
 
 const NAV = [
   { href: "/present", label: "Present" },
@@ -31,7 +32,9 @@ export function AppHeader({ badge }: { badge?: ReactNode }) {
   return (
     <header className="app-header">
       <Link href="/" className="app-brand">
-        <span className="app-mark">JL</span>
+        <span className="app-mark">
+          <BrandGlyph />
+        </span>
         Janus&nbsp;Live
       </Link>
       <nav className="app-nav">

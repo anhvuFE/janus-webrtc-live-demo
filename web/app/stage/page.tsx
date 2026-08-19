@@ -17,6 +17,7 @@ import { PageHero } from "@/components/PageHero";
 import { FilterPanel } from "@/components/FilterPanel";
 import { useVideoFx } from "@/lib/use-video-fx";
 import { useDisplayName } from "@/lib/identity";
+import { startStageRecorder, type StageRecorder } from "@/lib/stage-recorder";
 
 type ChatLine =
   | { kind: "msg"; data: ChatMessage }
@@ -67,12 +68,14 @@ export default function StagePage() {
   const stageRef = useRef<StageHandle | null>(null);
   const chatRef = useRef<ChatHandle | null>(null);
   const rawRef = useRef<MediaStream | null>(null);
+  const recorderRef = useRef<StageRecorder | null>(null);
   const { settings, setSettings, attach, release } = useVideoFx((m) =>
     setError(m)
   );
 
   const [name, setName] = useDisplayName();
   const [joined, setJoined] = useState(false);
+  const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Enter a name and join the stage");
   const [error, setError] = useState<string | null>(null);
@@ -142,6 +145,9 @@ export default function StagePage() {
       });
 
       setJoined(true);
+      // Record the room: the live spotlight video + a mix of everyone's audio.
+      recorderRef.current = startStageRecorder(() => spotlightRef.current);
+      setRecording(recorderRef.current !== null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setStatus("Failed to join");
@@ -151,6 +157,10 @@ export default function StagePage() {
   }, [name, username, upsertFeed, removeFeed]);
 
   const leave = useCallback(() => {
+    // Finalise the recording first (its onstop uploads it to /recordings).
+    recorderRef.current?.stop();
+    recorderRef.current = null;
+    setRecording(false);
     chatRef.current?.leave();
     chatRef.current = null;
     stageRef.current?.leave();
@@ -202,6 +212,15 @@ export default function StagePage() {
     if (spotlightRef.current) spotlightRef.current.srcObject = active.stream;
   }, [active.stream, active.key]);
 
+  // Keep the recording's audio mix in sync as participants join/leave.
+  useEffect(() => {
+    const streams = [
+      localStream,
+      ...[...feeds.values()].map((f) => f.stream),
+    ].filter((s): s is MediaStream => !!s);
+    recorderRef.current?.syncAudio(streams);
+  }, [feeds, localStream]);
+
   // Keep the chat pinned to the newest message as it grows.
   useEffect(() => {
     const el = logRef.current;
@@ -218,9 +237,16 @@ export default function StagePage() {
         title="Stage"
         subtitle="Join the multi-party room — everyone shares camera + chat, YouTube-Live style."
         badge={
-          <span className={`badge ${joined ? "live" : ""}`}>
-            {joined ? `● Live · ${count}` : "Lobby"}
-          </span>
+          <>
+            <span className={`badge ${joined ? "live" : ""}`}>
+              {joined ? `● Live · ${count}` : "Lobby"}
+            </span>
+            {recording && (
+              <span className="rec-pill" style={{ marginLeft: 8 }}>
+                ● Rec
+              </span>
+            )}
+          </>
         }
       />
 

@@ -147,9 +147,10 @@ Two sources land in the same `/recordings` browser:
 - **Buffered path:** MediaMTX records every WHIP broadcast to
   `recordings/<stream>/<timestamp>.mp4` (fragmented MP4, directly playable).
   Disable or auto-prune via `record` / `recordDeleteAfter` in `mediamtx/mediamtx.yml`.
-- **WebRTC path:** the `/present` broadcast is captured presenter-side with
-  `MediaRecorder` and uploaded on Stop to `recordings/present/<timestamp>.webm`
-  via `POST /api/recordings/upload`.
+- **WebRTC path:** captured client-side with `MediaRecorder` and uploaded on
+  Stop via `POST /api/recordings/upload` — the `/present` broadcast to
+  `recordings/present/…webm`, and the `/stage` room (spotlight video + a mix of
+  everyone's audio) to `recordings/stage/…webm`.
 
 The Next.js API (`/api/recordings`) lists both `.mp4` and `.webm` and streams
 them with HTTP Range support to the `/recordings` player.

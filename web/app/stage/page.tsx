@@ -18,6 +18,7 @@ import { FilterPanel } from "@/components/FilterPanel";
 import { useVideoFx } from "@/lib/use-video-fx";
 import { useDisplayName } from "@/lib/identity";
 import { startStageRecorder, type StageRecorder } from "@/lib/stage-recorder";
+import { Button, Chip, Input } from "@heroui/react";
 
 type ChatLine =
   | { kind: "msg"; data: ChatMessage }
@@ -237,16 +238,16 @@ export default function StagePage() {
         title="Stage"
         subtitle="Join the multi-party room — everyone shares camera + chat, YouTube-Live style."
         badge={
-          <>
-            <span className={`badge ${joined ? "live" : ""}`}>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Chip color={joined ? "success" : "default"} variant="soft">
               {joined ? `● Live · ${count}` : "Lobby"}
-            </span>
+            </Chip>
             {recording && (
-              <span className="rec-pill" style={{ marginLeft: 8 }}>
+              <Chip color="danger" variant="soft">
                 ● Rec
-              </span>
+              </Chip>
             )}
-          </>
+          </div>
         }
       />
 
@@ -353,22 +354,21 @@ export default function StagePage() {
                 {joined ? (
                   <>
                     <TheaterButton targetRef={stageElRef} />
-                    <button className="danger" onClick={leave}>
+                    <Button variant="danger" onPress={leave}>
                       Leave
-                    </button>
+                    </Button>
                   </>
                 ) : (
                   <div className="yt-join">
-                    <input
-                      className="text-input"
+                    <Input
                       placeholder="Your name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && join()}
                     />
-                    <button className="primary" onClick={join} disabled={busy}>
+                    <Button variant="primary" isDisabled={busy} onPress={join}>
                       {busy ? "Joining…" : "Join"}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -429,17 +429,16 @@ export default function StagePage() {
             )}
           </div>
           <div className="yt-chat-input">
-            <input
-              className="text-input"
+            <Input
               placeholder={joined ? "Chat…" : "Join to chat"}
               value={draft}
               disabled={!joined}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             />
-            <button onClick={sendMessage} disabled={!joined}>
+            <Button variant="secondary" isDisabled={!joined} onPress={sendMessage}>
               Send
-            </button>
+            </Button>
           </div>
         </aside>
       </div>

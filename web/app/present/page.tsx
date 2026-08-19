@@ -10,6 +10,7 @@ import {
   stopPreview,
   subscribePresenter,
 } from "@/lib/presenter-session";
+import { Button, Chip, Input } from "@heroui/react";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
 import { FilterPanel } from "@/components/FilterPanel";
@@ -42,8 +43,49 @@ export default function PresentPage() {
     if (videoRef.current) videoRef.current.srcObject = stream;
   }, [stream]);
 
+  // Drag placed decal stickers around on the preview video.
+  const dragId = useRef<string | null>(null);
+  const norm = (e: React.PointerEvent) => {
+    const r = videoRef.current!.getBoundingClientRect();
+    const clamp = (v: number) => Math.max(0, Math.min(1, v));
+    return {
+      x: clamp((e.clientX - r.left) / r.width),
+      y: clamp((e.clientY - r.top) / r.height),
+    };
+  };
+  const onStickerDown = (e: React.PointerEvent) => {
+    if (!settings.stickers.length) return;
+    const { x, y } = norm(e);
+    let best: string | null = null;
+    let bd = 0.09;
+    for (const s of settings.stickers) {
+      const d = Math.hypot(s.x - x, s.y - y);
+      if (d < bd) {
+        bd = d;
+        best = s.id;
+      }
+    }
+    if (best) {
+      dragId.current = best;
+      videoRef.current?.setPointerCapture(e.pointerId);
+    }
+  };
+  const onStickerMove = (e: React.PointerEvent) => {
+    if (!dragId.current) return;
+    const { x, y } = norm(e);
+    setPresenterFx({
+      ...settings,
+      stickers: settings.stickers.map((s) =>
+        s.id === dragId.current ? { ...s, x, y } : s
+      ),
+    });
+  };
+  const onStickerUp = () => {
+    dragId.current = null;
+  };
+
   return (
-    <main className="container">
+    <main className="container dark">
       <AppHeader />
 
       <PageHero
@@ -52,14 +94,27 @@ export default function PresentPage() {
         title="Presenter"
         subtitle="Publish your camera to the Janus room — viewers watch on /watch. Your broadcast keeps running if you switch to another tab."
         badge={
-          <span className={`badge ${live ? "live" : ""}`}>
+          <Chip color={live ? "success" : "default"} variant="soft">
             {live ? "● Live" : "Offline"}
-          </span>
+          </Chip>
         }
       />
 
       <div className="video-wrap">
-        <video ref={videoRef} autoPlay playsInline muted />
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          onPointerDown={onStickerDown}
+          onPointerMove={onStickerMove}
+          onPointerUp={onStickerUp}
+          style={
+            settings.stickers.length
+              ? { touchAction: "none", cursor: "grab" }
+              : undefined
+          }
+        />
         {!stream && (
           <div className="video-placeholder">
             <svg
@@ -81,32 +136,46 @@ export default function PresentPage() {
         )}
       </div>
 
-      <div className="status">
+      <div
+        className="status"
+        style={{ display: "flex", alignItems: "center", gap: 10 }}
+      >
         <span>{status}</span>
-        {recording && <span className="rec-pill">● Rec</span>}
+        {recording && (
+          <Chip color="danger" variant="soft" size="sm">
+            ● Rec
+          </Chip>
+        )}
       </div>
 
       {error && <div className="error">{error}</div>}
 
-      <div className="controls">
+      <div
+        className="controls"
+        style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 20 }}
+      >
         {!live && (
-          <input
-            className="text-input"
-            style={{ maxWidth: 220 }}
+          <Input
             placeholder="Your name"
             value={displayName}
             maxLength={40}
             onChange={(e) => setDisplayName(e.target.value)}
+            style={{ maxWidth: 220 }}
           />
         )}
         {!live ? (
-          <button className="primary" onClick={startPresenter} disabled={busy}>
+          <Button
+            variant="primary"
+            size="lg"
+            isDisabled={busy}
+            onPress={startPresenter}
+          >
             {busy ? "Starting…" : "Go live"}
-          </button>
+          </Button>
         ) : (
-          <button className="danger" onClick={stopPresenter}>
+          <Button variant="danger" size="lg" onPress={stopPresenter}>
             Stop streaming
-          </button>
+          </Button>
         )}
       </div>
 

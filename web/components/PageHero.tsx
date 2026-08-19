@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Card, CardContent, CardDescription, CardTitle } from "@heroui/react";
 
 // Line-icon set for the page heroes (inline SVG, no emoji). Add a key here and
 // reference it via the `icon` prop.
@@ -59,28 +60,34 @@ export function PageHero({
   badge?: ReactNode;
 }) {
   return (
-    <section className="page-hero">
-      {icon && (
-        <span className="page-hero-icon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            {ICONS[icon]}
-          </svg>
-        </span>
-      )}
-      <div className="page-hero-body">
-        {eyebrow && <span className="page-hero-eyebrow">{eyebrow}</span>}
-        <h1 className="page-hero-title">{title}</h1>
-        {subtitle && <p className="page-hero-sub">{subtitle}</p>}
-      </div>
-      {badge && <div className="page-hero-badge">{badge}</div>}
-    </section>
+    <Card style={{ marginBottom: 28 }}>
+      <CardContent>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          {icon && (
+            <span className="page-hero-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                {ICONS[icon]}
+              </svg>
+            </span>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {eyebrow && <span className="page-hero-eyebrow">{eyebrow}</span>}
+            <CardTitle>{title}</CardTitle>
+            {subtitle && <CardDescription>{subtitle}</CardDescription>}
+          </div>
+          {badge && (
+            <div style={{ flex: "none", alignSelf: "flex-start" }}>{badge}</div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

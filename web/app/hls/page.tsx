@@ -6,6 +6,7 @@ import Hls from "hls.js";
 import { hlsPlaylist, MEDIAMTX_STREAM, whepEndpoint } from "@/lib/config";
 import { makeHlsSampler } from "@/lib/hud-samplers";
 import { whepPlay, type WhepSession } from "@/lib/whep";
+import { Button, Chip } from "@heroui/react";
 import { StatsHud } from "@/components/StatsHud";
 import { Watermark } from "@/components/Watermark";
 import { TheaterButton } from "@/components/TheaterButton";
@@ -140,9 +141,12 @@ export default function HlsPage() {
           </>
         }
         badge={
-          <span className={`badge ${playing || streamLive ? "live" : ""}`}>
+          <Chip
+            color={playing || streamLive ? "success" : "default"}
+            variant="soft"
+          >
             {playing ? "● Playing" : streamLive ? "● Stream live" : "Idle"}
-          </span>
+          </Chip>
         }
       />
 
@@ -198,13 +202,13 @@ export default function HlsPage() {
 
       <div className="controls">
         {!playing ? (
-          <button className="primary" onClick={play}>
+          <Button variant="primary" size="lg" onPress={play}>
             Play stream
-          </button>
+          </Button>
         ) : (
-          <button className="danger" onClick={stop}>
+          <Button variant="danger" size="lg" onPress={stop}>
             Stop
-          </button>
+          </Button>
         )}
         <TheaterButton targetRef={wrapRef} />
       </div>

@@ -4,6 +4,10 @@ import {
   ACCESSORIES,
   BACKGROUNDS,
   COLOR_PRESETS,
+  DECALS,
+  EFFECTS,
+  FRAMES,
+  type DecalKind,
   type FxSettings,
 } from "@/lib/fx-presets";
 
@@ -17,6 +21,22 @@ export function FilterPanel({
   onChange: (next: FxSettings) => void;
 }) {
   const set = (patch: Partial<FxSettings>) => onChange({ ...settings, ...patch });
+
+  const addSticker = (kind: DecalKind) => {
+    const jitter = () => 0.5 + (Math.random() - 0.5) * 0.24;
+    set({
+      stickers: [
+        ...settings.stickers,
+        {
+          id: `${kind}-${Date.now()}-${Math.floor(Math.random() * 1e4)}`,
+          kind,
+          x: jitter(),
+          y: jitter(),
+          scale: 1,
+        },
+      ],
+    });
+  };
 
   return (
     <div className="fx-panel">
@@ -85,6 +105,65 @@ export function FilterPanel({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="fx-group">
+        <span className="fx-label">Frame</span>
+        <div className="fx-chips">
+          {FRAMES.map((f) => (
+            <button
+              key={f.id}
+              className={`fx-chip${settings.frame === f.id ? " active" : ""}`}
+              onClick={() => set({ frame: f.id })}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="fx-group">
+        <span className="fx-label">Effect</span>
+        <div className="fx-chips">
+          {EFFECTS.map((e) => (
+            <button
+              key={e.id}
+              className={`fx-chip${settings.effect === e.id ? " active" : ""}`}
+              onClick={() => set({ effect: e.id })}
+            >
+              {e.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="fx-group">
+        <span className="fx-label">
+          Stickers{settings.stickers.length ? ` · ${settings.stickers.length}` : ""}
+        </span>
+        <div className="fx-chips">
+          {DECALS.map((d) => (
+            <button
+              key={d.kind}
+              className="fx-chip"
+              onClick={() => addSticker(d.kind)}
+            >
+              {d.label}
+            </button>
+          ))}
+          {settings.stickers.length > 0 && (
+            <button
+              className="fx-chip"
+              onClick={() => set({ stickers: [] })}
+              style={{ borderColor: "rgba(244,63,94,0.5)", color: "#ffd7dd" }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        <span style={{ fontSize: 12, color: "var(--muted)" }}>
+          Tap to add · drag on the video to move
+        </span>
       </div>
     </div>
   );

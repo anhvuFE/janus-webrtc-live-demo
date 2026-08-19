@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { useScrollEffect } from "@/lib/use-scroll-effect";
 
 const USE_CASES = [
   { img: "/usecases/1.jpg", t: "Live events", d: "Broadcast keynotes to many viewers." },
@@ -34,38 +35,25 @@ export function UseCases() {
   const row1Ref = useRef<HTMLDivElement>(null);
   const row2Ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    let raf = 0;
-    const MAX = 8; // matches Evercast's ~7.8 at full entrance
+  const MAX = 8; // matches Evercast's ~7.8 at full entrance
 
-    const update = () => {
-      raf = 0;
-      const wrap = wrapRef.current;
-      if (!wrap || !row1Ref.current || !row2Ref.current) return;
-      const vh = window.innerHeight;
-      // Base on the (untransformed) wrapper so applying transforms can't feed back.
-      const rect = wrap.getBoundingClientRect();
-      // 1 while the block is still low on screen → 0 once it has risen into view.
-      const base = clamp((rect.top - vh * 0.15) / (vh * 0.65), 0, 1);
-      // Each row does translate3d(0, k%, -k vw): drops down + recedes, then settles
-      // to 0. The bottom row lags so it rises up over the top row last.
-      const k1 = base * MAX;
-      const k2 = clamp(base + 0.12, 0, 1) * MAX;
-      row1Ref.current.style.transform = `translate3d(0, ${k1}%, ${-k1}vw)`;
-      row2Ref.current.style.transform = `translate3d(0, ${k2}%, ${-k2}vw)`;
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
+  const update = () => {
+    const wrap = wrapRef.current;
+    if (!wrap || !row1Ref.current || !row2Ref.current) return;
+    const vh = window.innerHeight;
+    // Base on the (untransformed) wrapper so applying transforms can't feed back.
+    const rect = wrap.getBoundingClientRect();
+    // 1 while the block is still low on screen → 0 once it has risen into view.
+    const base = clamp((rect.top - vh * 0.15) / (vh * 0.65), 0, 1);
+    // Each row does translate3d(0, k%, -k vw): drops down + recedes, then settles
+    // to 0. The bottom row lags so it rises up over the top row last.
+    const k1 = base * MAX;
+    const k2 = clamp(base + 0.12, 0, 1) * MAX;
+    row1Ref.current.style.transform = `translate3d(0, ${k1}%, ${-k1}vw)`;
+    row2Ref.current.style.transform = `translate3d(0, ${k2}%, ${-k2}vw)`;
+  };
+
+  useScrollEffect(wrapRef, update);
 
   return (
     <div className="ev-usecases" ref={wrapRef}>

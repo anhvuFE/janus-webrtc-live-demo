@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { useScrollEffect } from "@/lib/use-scroll-effect";
 
 // Two-row strip of real app icons + media thumbnails. The rows slide
 // horizontally in OPPOSITE directions as the section scrolls through the
@@ -60,31 +61,18 @@ export function AppMarquee() {
   const row1Ref = useRef<HTMLDivElement>(null);
   const row2Ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const wrap = wrapRef.current;
-      if (!wrap || !row1Ref.current || !row2Ref.current) return;
-      const vh = window.innerHeight;
-      const rect = wrap.getBoundingClientRect();
-      // -1 (section below the fold) .. +1 (above it)
-      const progress = (vh / 2 - (rect.top + rect.height / 2)) / vh;
-      row1Ref.current.style.transform = `translate3d(${-progress * SHIFT}px,0,0)`;
-      row2Ref.current.style.transform = `translate3d(${progress * SHIFT}px,0,0)`;
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
+  const update = () => {
+    const wrap = wrapRef.current;
+    if (!wrap || !row1Ref.current || !row2Ref.current) return;
+    const vh = window.innerHeight;
+    const rect = wrap.getBoundingClientRect();
+    // -1 (section below the fold) .. +1 (above it)
+    const progress = (vh / 2 - (rect.top + rect.height / 2)) / vh;
+    row1Ref.current.style.transform = `translate3d(${-progress * SHIFT}px,0,0)`;
+    row2Ref.current.style.transform = `translate3d(${progress * SHIFT}px,0,0)`;
+  };
+
+  useScrollEffect(wrapRef, update);
 
   return (
     <div className="ev-marquee" ref={wrapRef} aria-hidden>

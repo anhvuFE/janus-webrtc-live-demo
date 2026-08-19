@@ -1,14 +1,15 @@
 // VideoRoom plugin config (demo)
-// A single pre-created room the presenter publishes into and viewers subscribe to.
+// Two pre-created rooms so the 1-to-many broadcast and the multi-party stage
+// stay separate — a /watch viewer must never subscribe to a /stage participant.
 // Docs: https://janus.conf.meetecho.com/docs/videoroom.html
 
 general: {
 	//admin_key = "supersecret"   // set to require a key when creating rooms via API
 }
 
-// Room 1234 — the demo "live stage".
+// Room 1234 — the 1-to-many broadcast (/present publishes, /watch subscribes).
 room-1234: {
-	description = "Janus WebRTC Live Demo — Stage"
+	description = "Janus WebRTC Live Demo — Broadcast"
 	is_private = false
 	publishers = 3           // how many can publish at once (presenter side)
 	bitrate = 1500000        // 1.5 Mbps cap per publisher
@@ -16,4 +17,15 @@ room-1234: {
 	audiocodec = "opus"
 	videocodec = "vp8,h264,vp9"   // client negotiates the first it supports
 	// pin = "presenterpin"        // uncomment to require a PIN to publish
+}
+
+// Room 1235 — the multi-party stage (/stage), everyone publishes + subscribes.
+room-1235: {
+	description = "Janus WebRTC Live Demo — Stage"
+	is_private = false
+	publishers = 6           // room for several stage participants at once
+	bitrate = 1500000        // 1.5 Mbps cap per publisher
+	fir_freq = 10            // ask publishers for a keyframe every 10s
+	audiocodec = "opus"
+	videocodec = "vp8,h264,vp9"   // client negotiates the first it supports
 }

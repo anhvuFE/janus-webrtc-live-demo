@@ -4,8 +4,15 @@
 export const JANUS_WS =
   process.env.NEXT_PUBLIC_JANUS_WS ?? "ws://localhost:8188";
 
+// The 1-to-many broadcast room: /present publishes here, /watch subscribes.
 export const JANUS_ROOM = Number(
   process.env.NEXT_PUBLIC_JANUS_ROOM ?? "1234"
+);
+
+// The multi-party stage room (video + chat), kept separate from the broadcast
+// room so a /watch viewer never picks up a /stage participant by accident.
+export const JANUS_STAGE_ROOM = Number(
+  process.env.NEXT_PUBLIC_JANUS_STAGE_ROOM ?? "1235"
 );
 
 // --- Buffered path (MediaMTX WHIP ingest -> LL-HLS egress) ---

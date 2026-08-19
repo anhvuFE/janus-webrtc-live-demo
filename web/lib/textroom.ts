@@ -4,7 +4,7 @@
 //
 // Docs: https://janus.conf.meetecho.com/docs/textroom.html
 
-import { JANUS_ROOM } from "./config";
+import { JANUS_STAGE_ROOM } from "./config";
 import type { JanusInstance, JanusPluginHandle } from "./janus-types";
 
 const TEXTROOM = "janus.plugin.textroom";
@@ -66,7 +66,7 @@ export async function joinChat(
           text: JSON.stringify({
             textroom: "join",
             transaction: tx(),
-            room: JANUS_ROOM,
+            room: JANUS_STAGE_ROOM,
             username,
             display,
           }),
@@ -78,7 +78,7 @@ export async function joinChat(
               text: JSON.stringify({
                 textroom: "message",
                 transaction: tx(),
-                room: JANUS_ROOM,
+                room: JANUS_STAGE_ROOM,
                 text,
               }),
             }),
@@ -88,7 +88,7 @@ export async function joinChat(
                 text: JSON.stringify({
                   textroom: "leave",
                   transaction: tx(),
-                  room: JANUS_ROOM,
+                  room: JANUS_STAGE_ROOM,
                 }),
               });
             } catch {

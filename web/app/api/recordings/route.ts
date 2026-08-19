@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import {
+  isRecordingFile,
   recordingsDir,
   type RecordingEntry,
 } from "@/lib/recordings";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/recordings — list all recorded .mp4 files (grouped by stream folder).
+// GET /api/recordings — list all recorded files (.mp4 + .webm), grouped by stream.
 export async function GET() {
   const base = recordingsDir();
   const entries: RecordingEntry[] = [];
@@ -30,7 +31,7 @@ export async function GET() {
       continue;
     }
     for (const file of files) {
-      if (!file.endsWith(".mp4")) continue;
+      if (!isRecordingFile(file)) continue;
       try {
         const stat = await fs.stat(path.join(base, stream, file));
         entries.push({

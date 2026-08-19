@@ -35,6 +35,9 @@ let stopFn: (() => void) | null = null;
 // The FX pipeline lives here too so filters survive navigation with the stream.
 let fx: VideoFx | null = null;
 let rawStream: MediaStream | null = null;
+// The FX-processed canvas stream — used for both the local preview and the
+// Janus publish, so "Go live" reuses the camera already running in preview.
+let processedStream: MediaStream | null = null;
 
 const listeners = new Set<() => void>();
 
@@ -56,22 +59,55 @@ export function subscribePresenter(listener: () => void): () => void {
   };
 }
 
-/** Go live (no-op if already live or mid-connect). */
+// Open the camera and start the FX pipeline once; the processed stream is cached
+// so preview and Go-live share the same camera. Idempotent.
+async function ensureCamera(): Promise<MediaStream> {
+  if (processedStream) return processedStream;
+  const raw = await navigator.mediaDevices.getUserMedia({
+    video: { frameRate: { ideal: 30 }, width: { ideal: 1280 } },
+    audio: true,
+  });
+  rawStream = raw;
+  fx = new VideoFx(raw, state.settings, (m) => setState({ error: m }));
+  processedStream = await fx.start();
+  setState({ stream: processedStream });
+  return processedStream;
+}
+
+/**
+ * Start the local camera preview (with FX) without publishing to Janus, so the
+ * presenter can frame the shot and try filters before going live. No-op if the
+ * camera is already running (preview or live).
+ */
+export async function startPreview(): Promise<void> {
+  if (processedStream || state.busy) return;
+  try {
+    await ensureCamera();
+    if (!state.live) setState({ status: "Camera ready — go live when set" });
+  } catch (e) {
+    setState({
+      error: e instanceof Error ? e.message : String(e),
+      status: "Camera unavailable",
+    });
+  }
+}
+
+/** Stop a preview-only camera. No-op while live (keeps the broadcast running). */
+export function stopPreview(): void {
+  if (state.live) return;
+  teardown();
+  setState({ stream: null, status: "Ready to go live" });
+}
+
+/** Go live (no-op if already live or mid-connect). Reuses the preview camera. */
 export async function startPresenter(): Promise<void> {
   if (state.live || state.busy) return;
   setState({ busy: true, error: null, status: "Requesting camera…" });
   try {
-    const raw = await navigator.mediaDevices.getUserMedia({
-      video: { frameRate: { ideal: 30 }, width: { ideal: 1280 } },
-      audio: true,
-    });
-    rawStream = raw;
-
-    // Run the raw camera through the FX pipeline and publish the processed
-    // canvas stream instead of the camera itself.
-    fx = new VideoFx(raw, state.settings, (m) => setState({ error: m }));
-    const processed = await fx.start();
-    setState({ stream: processed, status: "Connecting to Janus…" });
+    // Reuse the preview camera/FX if running, otherwise open it now. Publish the
+    // processed canvas stream instead of the raw camera.
+    const processed = await ensureCamera();
+    setState({ status: "Connecting to Janus…" });
 
     await ensureJanus();
     const s = await createSession();
@@ -99,10 +135,13 @@ export async function startPresenter(): Promise<void> {
   }
 }
 
-/** Tear down the live broadcast. Safe to call when idle. */
+/** Stop publishing but keep the local camera preview running. */
 export function stopPresenter(): void {
-  teardown();
-  setState({ live: false, stream: null, status: "Stopped" });
+  stopFn?.();
+  stopFn = null;
+  session?.destroy();
+  session = null;
+  setState({ live: false, status: "Stopped — preview only" });
 }
 
 /** Update the live FX settings; pushes into the running pipeline if any. */
@@ -121,4 +160,5 @@ function teardown(): void {
   fx = null;
   rawStream?.getTracks().forEach((t) => t.stop());
   rawStream = null;
+  processedStream = null;
 }

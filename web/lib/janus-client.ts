@@ -270,6 +270,28 @@ function waitForPublisher(
       resolve(feed);
     };
 
+    // `listparticipants` is a SYNCHRONOUS VideoRoom request: janus.js delivers
+    // the reply to this send()'s own success callback, NOT to the handle's
+    // onmessage. Reading it from onmessage (as before) meant the reply was never
+    // seen and the viewer hung on "Connecting…" forever — hence "can't watch".
+    const onParticipants = (data: Record<string, unknown>) => {
+      if (detached) return;
+      const participants = data?.["participants"] as
+        | Array<Record<string, unknown>>
+        | undefined;
+      const publisher = Array.isArray(participants)
+        ? participants.find((p) => p["publisher"] === true)
+        : undefined;
+      if (publisher) {
+        finish(Number(publisher["id"]));
+      } else if (!isStopped()) {
+        cb.onWaiting?.();
+        setTimeout(poll, 1500);
+      } else {
+        finish(null);
+      }
+    };
+
     session.attach({
       plugin: VIDEOROOM,
       opaqueId: `probe-${Date.now()}`,
@@ -278,22 +300,6 @@ function waitForPublisher(
         poll();
       },
       error: () => finish(null),
-      onmessage: (msg: Record<string, unknown>) => {
-        if (detached) return;
-        const participants = msg["participants"] as
-          | Array<Record<string, unknown>>
-          | undefined;
-        if (!participants) return;
-        const publisher = participants.find((p) => p["publisher"] === true);
-        if (publisher) {
-          finish(Number(publisher["id"]));
-        } else if (!isStopped()) {
-          cb.onWaiting?.();
-          setTimeout(poll, 1500);
-        } else {
-          finish(null);
-        }
-      },
     });
 
     function poll() {
@@ -302,7 +308,14 @@ function waitForPublisher(
         finish(null);
         return;
       }
-      probe.send({ message: { request: "listparticipants", room: JANUS_ROOM } });
+      probe.send({
+        message: { request: "listparticipants", room: JANUS_ROOM },
+        success: onParticipants,
+        error: () => {
+          if (isStopped()) finish(null);
+          else setTimeout(poll, 1500);
+        },
+      });
     }
   });
 }

@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
+import {
+  getPresenterState,
+  stopPresenter,
+  subscribePresenter,
+} from "@/lib/presenter-session";
 
 const NAV = [
   { href: "/present", label: "Present" },
@@ -16,6 +21,13 @@ const NAV = [
 // Shared top chrome for the app/player pages: brand (home), tool nav, status slot.
 export function AppHeader({ badge }: { badge?: ReactNode }) {
   const path = usePathname();
+  // Show a live indicator on every page while a broadcast is running, so you can
+  // stop it from anywhere (not just the /present page you started it on).
+  const { live } = useSyncExternalStore(
+    subscribePresenter,
+    getPresenterState,
+    getPresenterState
+  );
   return (
     <header className="app-header">
       <Link href="/" className="app-brand">
@@ -33,7 +45,19 @@ export function AppHeader({ badge }: { badge?: ReactNode }) {
           </Link>
         ))}
       </nav>
-      <div className="app-header-right">{badge}</div>
+      <div className="app-header-right">
+        {live && (
+          <button
+            className="present-live-pill"
+            onClick={stopPresenter}
+            title="Stop your broadcast"
+          >
+            <i className="tile-dot" />
+            Live · Stop
+          </button>
+        )}
+        {badge}
+      </div>
     </header>
   );
 }

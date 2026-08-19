@@ -18,6 +18,7 @@ export interface PresenterState {
   error: string | null;
   stream: MediaStream | null;
   settings: FxSettings;
+  recording: boolean;
 }
 
 const INITIAL: PresenterState = {
@@ -27,6 +28,7 @@ const INITIAL: PresenterState = {
   error: null,
   stream: null,
   settings: DEFAULT_FX,
+  recording: false,
 };
 
 let state: PresenterState = INITIAL;
@@ -38,6 +40,9 @@ let rawStream: MediaStream | null = null;
 // The FX-processed canvas stream — used for both the local preview and the
 // Janus publish, so "Go live" reuses the camera already running in preview.
 let processedStream: MediaStream | null = null;
+// Presenter-side recording of the published stream (uploaded to /recordings).
+let recorder: MediaRecorder | null = null;
+let recChunks: Blob[] = [];
 
 const listeners = new Set<() => void>();
 
@@ -122,6 +127,7 @@ export async function startPresenter(): Promise<void> {
       processed
     );
     setState({ live: true, busy: false });
+    startRecording(processed);
   } catch (e) {
     // Roll back any partial session so we don't leak a handle or camera.
     teardown();
@@ -141,7 +147,86 @@ export function stopPresenter(): void {
   stopFn = null;
   session?.destroy();
   session = null;
+  // Finalise the recording (its onstop uploads it to /recordings).
+  stopRecording();
   setState({ live: false, status: "Stopped — preview only" });
+}
+
+// ---- presenter-side recording ----
+
+function pickRecMime(): string | null {
+  if (typeof MediaRecorder === "undefined") return null;
+  const candidates = [
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm",
+  ];
+  return candidates.find((m) => MediaRecorder.isTypeSupported(m)) ?? null;
+}
+
+// Record the published (FX-processed) stream. No-op where MediaRecorder/webm is
+// unsupported (e.g. some Safari builds) — the broadcast still runs.
+function startRecording(stream: MediaStream): void {
+  const mime = pickRecMime();
+  if (!mime || recorder) return;
+  recChunks = [];
+  try {
+    recorder = new MediaRecorder(stream, { mimeType: mime });
+  } catch {
+    recorder = null;
+    return;
+  }
+  recorder.ondataavailable = (e) => {
+    if (e.data && e.data.size) recChunks.push(e.data);
+  };
+  recorder.onstop = () => {
+    const blob = new Blob(recChunks, { type: mime });
+    recChunks = [];
+    recorder = null;
+    setState({ recording: false });
+    if (blob.size) void uploadRecording(blob);
+  };
+  recorder.start(1000); // flush data every second so long sessions don't buffer
+  setState({ recording: true });
+}
+
+// Stop and upload (onstop handles the upload).
+function stopRecording(): void {
+  if (recorder && recorder.state !== "inactive") recorder.stop();
+}
+
+// Stop and discard without uploading (used on error rollback / teardown).
+function discardRecording(): void {
+  if (recorder) {
+    recorder.onstop = null;
+    try {
+      if (recorder.state !== "inactive") recorder.stop();
+    } catch {
+      /* ignore */
+    }
+    recorder = null;
+  }
+  recChunks = [];
+  if (state.recording) setState({ recording: false });
+}
+
+async function uploadRecording(blob: Blob): Promise<void> {
+  setState({ status: "Uploading recording…" });
+  try {
+    const res = await fetch("/api/recordings/upload?stream=present", {
+      method: "POST",
+      headers: { "Content-Type": blob.type || "video/webm" },
+      body: blob,
+    });
+    if (!res.ok) throw new Error(`upload failed (${res.status})`);
+    setState({ status: "Recording saved — see /recordings" });
+  } catch (e) {
+    setState({
+      error: `Recording upload failed: ${
+        e instanceof Error ? e.message : String(e)
+      }`,
+    });
+  }
 }
 
 /** Update the live FX settings; pushes into the running pipeline if any. */
@@ -152,6 +237,7 @@ export function setPresenterFx(settings: FxSettings): void {
 
 // Release the Janus session, FX pipeline and camera. Idempotent.
 function teardown(): void {
+  discardRecording();
   stopFn?.();
   stopFn = null;
   session?.destroy();

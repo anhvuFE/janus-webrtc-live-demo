@@ -15,6 +15,24 @@ export function recordingsDir(): string {
   );
 }
 
+// Playable recording extensions: MediaMTX writes .mp4 (WHIP path); the WebRTC
+// path uploads presenter-side MediaRecorder captures as .webm.
+export const RECORDING_EXTS = [".mp4", ".webm"] as const;
+
+export function isRecordingFile(name: string): boolean {
+  return RECORDING_EXTS.some((ext) => name.endsWith(ext));
+}
+
+export function contentTypeFor(name: string): string {
+  return name.endsWith(".webm") ? "video/webm" : "video/mp4";
+}
+
+/** Sanitise a stream/folder name to a safe single path segment. */
+export function safeStreamName(name: string): string {
+  const cleaned = name.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40);
+  return cleaned || "webrtc";
+}
+
 export interface RecordingEntry {
   /** Path relative to recordingsDir(), used as the streaming id. */
   id: string;
@@ -31,7 +49,7 @@ export interface RecordingEntry {
 export async function resolveRecording(id: string): Promise<string | null> {
   const base = recordingsDir();
   const candidate = path.resolve(base, id);
-  if (!candidate.endsWith(".mp4")) return null;
+  if (!isRecordingFile(candidate)) return null;
   let real: string;
   try {
     real = await fs.realpath(candidate); // follows symlinks; throws if missing

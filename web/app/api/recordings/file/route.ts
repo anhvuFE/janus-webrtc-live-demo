@@ -2,7 +2,7 @@ import { createReadStream } from "node:fs";
 import { promises as fs } from "node:fs";
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import { resolveRecording } from "@/lib/recordings";
+import { contentTypeFor, resolveRecording } from "@/lib/recordings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
   const range = request.headers.get("range");
   const baseHeaders: Record<string, string> = {
-    "Content-Type": "video/mp4",
+    "Content-Type": contentTypeFor(filePath),
     "Accept-Ranges": "bytes",
     "Cache-Control": "no-store",
   };

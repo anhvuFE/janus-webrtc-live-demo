@@ -138,10 +138,17 @@ Client env vars (`web/.env.local`):
 
 ## Recordings
 
-MediaMTX records every WHIP broadcast to `recordings/<stream>/<timestamp>.mp4`
-(fragmented MP4, directly playable). The Next.js API (`/api/recordings`) lists
-them and streams them with HTTP Range support to the `/recordings` player.
-Disable or auto-prune via `record` / `recordDeleteAfter` in `mediamtx/mediamtx.yml`.
+Two sources land in the same `/recordings` browser:
+
+- **Buffered path:** MediaMTX records every WHIP broadcast to
+  `recordings/<stream>/<timestamp>.mp4` (fragmented MP4, directly playable).
+  Disable or auto-prune via `record` / `recordDeleteAfter` in `mediamtx/mediamtx.yml`.
+- **WebRTC path:** the `/present` broadcast is captured presenter-side with
+  `MediaRecorder` and uploaded on Stop to `recordings/present/<timestamp>.webm`
+  via `POST /api/recordings/upload`.
+
+The Next.js API (`/api/recordings`) lists both `.mp4` and `.webm` and streams
+them with HTTP Range support to the `/recordings` player.
 
 ## Networking notes
 

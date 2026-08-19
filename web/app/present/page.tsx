@@ -19,11 +19,12 @@ export default function PresentPage() {
   // The session (and its FX pipeline) lives outside React
   // (lib/presenter-session) so it survives navigation to another tab — we only
   // mirror its state here.
-  const { live, busy, status, error, stream, settings } = useSyncExternalStore(
-    subscribePresenter,
-    getPresenterState,
-    getPresenterState
-  );
+  const { live, busy, status, error, stream, settings, recording } =
+    useSyncExternalStore(
+      subscribePresenter,
+      getPresenterState,
+      getPresenterState
+    );
 
   // Show the camera preview (with FX) as soon as the page opens, before going
   // live. On leave we release the preview camera — but stopPreview is a no-op
@@ -80,6 +81,7 @@ export default function PresentPage() {
 
       <div className="status">
         <span>{status}</span>
+        {recording && <span className="rec-pill">● Rec</span>}
       </div>
 
       {error && <div className="error">{error}</div>}

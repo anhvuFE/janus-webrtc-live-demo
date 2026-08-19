@@ -23,6 +23,13 @@ const MEDIAMTX_HLS_BASE =
 export const whipEndpoint = () =>
   `${MEDIAMTX_WHIP_BASE}/${MEDIAMTX_STREAM}/whip`;
 
+/**
+ * WHEP playback endpoint — MediaMTX serves the SAME stream over WebRTC for
+ * sub-second latency, alongside the buffered LL-HLS egress and recording.
+ */
+export const whepEndpoint = () =>
+  `${MEDIAMTX_WHIP_BASE}/${MEDIAMTX_STREAM}/whep`;
+
 /** LL-HLS playlist URL for the configured stream. */
 export const hlsPlaylist = () =>
   `${MEDIAMTX_HLS_BASE}/${MEDIAMTX_STREAM}/index.m3u8`;

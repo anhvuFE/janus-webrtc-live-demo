@@ -12,6 +12,7 @@ import { TheaterButton } from "@/components/TheaterButton";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
 import { viewerTag } from "@/lib/viewer";
+import { useLiveStatus } from "@/lib/live-status";
 
 // The same MediaMTX ingest is served two ways: buffered LL-HLS (scalable,
 // CDN-friendly) and low-latency WebRTC/WHEP (sub-second). One /broadcast, both.
@@ -27,6 +28,9 @@ export default function HlsPage() {
   const [playing, setPlaying] = useState(false);
   const [status, setStatus] = useState("Ready — start the WHIP broadcaster first");
   const [error, setError] = useState<string | null>(null);
+
+  // "Who's live" so the viewer knows the MediaMTX stream is up before playing.
+  const streamLive = useLiveStatus()?.buffered.live ?? false;
 
   const tag = useMemo(() => viewerTag(), []);
   const sampler = useMemo(
@@ -136,8 +140,8 @@ export default function HlsPage() {
           </>
         }
         badge={
-          <span className={`badge ${playing ? "live" : ""}`}>
-            {playing ? "● Playing" : "Idle"}
+          <span className={`badge ${playing || streamLive ? "live" : ""}`}>
+            {playing ? "● Playing" : streamLive ? "● Stream live" : "Idle"}
           </span>
         }
       />
@@ -174,8 +178,12 @@ export default function HlsPage() {
               <circle cx="12" cy="12" r="9" />
               <path d="M10 8.5l6 3.5-6 3.5z" />
             </svg>
-            <strong>Nothing playing yet</strong>
-            <span>Start /broadcast first, then press “Play stream”.</span>
+            <strong>{streamLive ? "Stream is live" : "Nothing playing yet"}</strong>
+            <span>
+              {streamLive
+                ? "Press “Play stream” to watch."
+                : "Start /broadcast first, then press “Play stream”."}
+            </span>
           </div>
         )}
         {playing && <Watermark label={`${tag} · ${MEDIAMTX_STREAM}`} />}

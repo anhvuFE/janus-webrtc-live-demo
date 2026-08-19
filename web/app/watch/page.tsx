@@ -12,6 +12,7 @@ import { TheaterButton } from "@/components/TheaterButton";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
 import { viewerTag } from "@/lib/viewer";
+import { useLiveStatus } from "@/lib/live-status";
 
 export default function WatchPage() {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -24,6 +25,10 @@ export default function WatchPage() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("Ready to watch");
   const [error, setError] = useState<string | null>(null);
+
+  // Poll "who's live" so we can tell the viewer a presenter is on before they join.
+  const liveStatus = useLiveStatus();
+  const presenterLive = liveStatus?.broadcast.live ?? false;
 
   const join = useCallback(async () => {
     setError(null);
@@ -73,8 +78,12 @@ export default function WatchPage() {
         title="Viewer"
         subtitle="Subscribe to the active presenter's live WebRTC feed."
         badge={
-          <span className={`badge ${watching ? "live" : ""}`}>
-            {watching ? "● Watching" : "Idle"}
+          <span className={`badge ${watching || presenterLive ? "live" : ""}`}>
+            {watching
+              ? "● Watching"
+              : presenterLive
+              ? "● Presenter live"
+              : "Idle"}
           </span>
         }
       />
@@ -96,8 +105,12 @@ export default function WatchPage() {
               <rect x="2.5" y="4" width="19" height="13" rx="2" />
               <path d="M8 21h8M12 17.5V21" />
             </svg>
-            <strong>No stream yet</strong>
-            <span>Hit “Watch live” to join the active presenter’s WebRTC feed.</span>
+            <strong>{presenterLive ? "A presenter is live" : "No stream yet"}</strong>
+            <span>
+              {presenterLive
+                ? "Hit “Watch live” to join the WebRTC feed."
+                : "Waiting for a presenter to go live…"}
+            </span>
           </div>
         )}
         {watching && <Watermark label={tag} />}

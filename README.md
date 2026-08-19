@@ -136,6 +136,7 @@ Client env vars (`web/.env.local`):
 | `NEXT_PUBLIC_MEDIAMTX_WHIP_BASE` | `http://localhost:8889` | WHIP ingest base |
 | `NEXT_PUBLIC_MEDIAMTX_HLS_BASE` | `http://localhost:8888` | HLS egress base |
 | `RECORDINGS_DIR` (server) | `../recordings` | Where the API reads recordings |
+| `JANUS_HTTP` (server) | `http://localhost:8088/janus` | Janus HTTP API, used by the who's-live probe |
 
 ## Recordings
 

@@ -33,6 +33,7 @@ const L_EYE = 33; // subject's right eye outer corner (image-left)
 const R_EYE = 263; // subject's left eye outer corner (image-right)
 const FOREHEAD = 10;
 const PHILTRUM = 164; // just below the nose
+const NOSE_TIP = 1; // tip of the nose
 
 export class VideoFx {
   private source: MediaStream;
@@ -319,6 +320,78 @@ export class VideoFx {
       ctx.fillStyle = "#8b5cf6";
       ctx.beginPath();
       ctx.arc(0, hy - d * 1.6, d * 0.14, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (settings.accessory === "crown") {
+      const by = -d * 1.5; // base sits above the eyes
+      const cw = d * 1.6;
+      const ch = d * 0.9;
+      const peaks = 5;
+      ctx.fillStyle = "#f5c518"; // gold
+      ctx.beginPath();
+      ctx.moveTo(-cw / 2, by);
+      for (let i = 0; i < peaks; i++) {
+        const x = -cw / 2 + (cw * (i + 0.5)) / peaks;
+        ctx.lineTo(x, by - ch); // spike up
+        ctx.lineTo(-cw / 2 + (cw * (i + 1)) / peaks, by); // valley
+      }
+      ctx.closePath();
+      ctx.fill();
+      // jewels at each spike tip
+      ctx.fillStyle = "#e23d6b";
+      for (let i = 0; i < peaks; i++) {
+        const x = -cw / 2 + (cw * (i + 0.5)) / peaks;
+        ctx.beginPath();
+        ctx.arc(x, by - ch, d * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (settings.accessory === "eyepatch") {
+      const off = d * 0.55; // over the subject's left eye (image-right)
+      const r = d * 0.42;
+      ctx.fillStyle = "#111";
+      ctx.beginPath();
+      ctx.ellipse(off, 0, r * 0.75, r * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // strap across the brow
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = Math.max(2, d * 0.06);
+      ctx.beginPath();
+      ctx.moveTo(off + r * 0.6, -r * 0.7);
+      ctx.lineTo(-d * 1.1, -r * 1.1);
+      ctx.moveTo(off + r * 0.5, r * 0.5);
+      ctx.lineTo(-d * 1.1, -r * 0.2);
+      ctx.stroke();
+    } else if (settings.accessory === "monocle") {
+      const off = d * 0.55; // over the subject's left eye (image-right)
+      const r = d * 0.42;
+      ctx.lineWidth = Math.max(2, d * 0.07);
+      ctx.strokeStyle = "#d4af37"; // gold rim
+      ctx.beginPath();
+      ctx.ellipse(off, 0, r * 0.62, r * 0.62, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      // subtle glass tint
+      ctx.fillStyle = "rgba(200,220,255,0.12)";
+      ctx.beginPath();
+      ctx.ellipse(off, 0, r * 0.62, r * 0.62, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // dangling chain
+      ctx.strokeStyle = "#d4af37";
+      ctx.lineWidth = Math.max(1, d * 0.03);
+      ctx.beginPath();
+      ctx.moveTo(off, r * 0.62);
+      ctx.quadraticCurveTo(off + d * 0.3, d * 1.1, off - d * 0.1, d * 1.6);
+      ctx.stroke();
+    } else if (settings.accessory === "nose") {
+      const tip = lm[NOSE_TIP];
+      const nx = tip ? tip.x * W - cx : 0; // relative to eye centre (pre-rotate ~ ok)
+      const ny = tip ? tip.y * H - cy : d * 0.9;
+      ctx.fillStyle = "#e23d3d";
+      ctx.beginPath();
+      ctx.arc(nx, ny, d * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+      // glossy highlight
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
+      ctx.beginPath();
+      ctx.arc(nx - d * 0.09, ny - d * 0.09, d * 0.08, 0, Math.PI * 2);
       ctx.fill();
     } else if (settings.accessory === "mustache") {
       const ph = lm[PHILTRUM];

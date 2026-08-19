@@ -5,7 +5,9 @@ import {
   getPresenterState,
   setPresenterFx,
   startPresenter,
+  startPreview,
   stopPresenter,
+  stopPreview,
   subscribePresenter,
 } from "@/lib/presenter-session";
 import { AppHeader } from "@/components/AppHeader";
@@ -22,9 +24,16 @@ export default function PresentPage() {
     getPresenterState
   );
 
+  // Show the camera preview (with FX) as soon as the page opens, before going
+  // live. On leave we release the preview camera — but stopPreview is a no-op
+  // while live, so an active broadcast keeps running across navigation.
+  useEffect(() => {
+    startPreview();
+    return () => stopPreview();
+  }, []);
+
   // Re-attach the (possibly already-running) stream whenever it changes or when
-  // we navigate back to this page. NOTE: intentionally no teardown on unmount —
-  // leaving the page keeps the broadcast live; Stop ends it explicitly.
+  // we navigate back to this page.
   useEffect(() => {
     if (videoRef.current) videoRef.current.srcObject = stream;
   }, [stream]);
@@ -47,7 +56,7 @@ export default function PresentPage() {
 
       <div className="video-wrap">
         <video ref={videoRef} autoPlay playsInline muted />
-        {!live && (
+        {!stream && (
           <div className="video-placeholder">
             <svg
               className="video-placeholder-icon"

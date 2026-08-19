@@ -40,7 +40,7 @@ paths** side by side:
 | `/watch` | Janus | Subscribe to the active presenter in the broadcast room. |
 | `/stage` | Janus | Multi-presenter grid + chat in a **separate stage** room (VideoRoom multistream + TextRoom). |
 | `/broadcast` | MediaMTX | Ingest your camera via WHIP; MediaMTX remuxes to LL-HLS. |
-| `/hls` | MediaMTX | Play the buffered Low-Latency HLS stream (hls.js). |
+| `/hls` | MediaMTX | Play the stream two ways: low-latency WebRTC (WHEP) or buffered LL-HLS. |
 | `/recordings` | MediaMTX | Browse & play sessions recorded server-side as fMP4. |
 
 ## Layout

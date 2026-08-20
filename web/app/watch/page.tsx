@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createSession,
@@ -126,8 +127,13 @@ export default function WatchPage() {
             <span>
               {presenterLive
                 ? "Hit “Watch live” to join the WebRTC feed."
-                : "Waiting for a presenter to go live…"}
+                : "Nobody is presenting yet. Go live in Present, or wait here."}
             </span>
+            {!presenterLive && (
+              <Link href="/present" target="_blank" className="placeholder-cta">
+                Open Present<span aria-hidden> →</span>
+              </Link>
+            )}
           </div>
         )}
         {watching && <Watermark label={tag} />}

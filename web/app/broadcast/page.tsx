@@ -10,6 +10,7 @@ import { Watermark } from "@/components/Watermark";
 import { Button, Chip } from "@heroui/react";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
+import { LiveDot } from "@/components/LiveDot";
 import { FilterPanel } from "@/components/FilterPanel";
 import { useVideoFx } from "@/lib/use-video-fx";
 
@@ -117,7 +118,7 @@ export default function BroadcastPage() {
         }
         badge={
           <Chip color={live ? "success" : "default"} variant="soft">
-            {live ? "● Ingesting" : "Offline"}
+            {live ? <><LiveDot />Ingesting</> : "Offline"}
           </Chip>
         }
       />

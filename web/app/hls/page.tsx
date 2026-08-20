@@ -28,7 +28,10 @@ export default function HlsPage() {
 
   const [mode, setMode] = useState<Mode>("webrtc");
   const [playing, setPlaying] = useState(false);
-  const [status, setStatus] = useState("Ready — start the WHIP broadcaster first");
+  // "waiting" = the user asked to play but nothing is publishing yet. We keep
+  // retrying so playback starts on its own once the broadcast goes live.
+  const [waiting, setWaiting] = useState(false);
+  const [status, setStatus] = useState("Ready — start the broadcaster, then press Play");
   const [error, setError] = useState<string | null>(null);
 
   // "Who's live" so the viewer knows the MediaMTX stream is up before playing.
@@ -75,30 +78,52 @@ export default function HlsPage() {
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       void video.play();
+      setWaiting(false);
       setPlaying(true);
       setStatus("Playing (LL-HLS via hls.js)");
     });
     hls.on(Hls.Events.ERROR, (_evt, data) => {
-      if (data.fatal) {
-        setError(
-          `HLS error: ${data.type} / ${data.details}. ` +
-            "Make sure the broadcaster is live and MediaMTX is running."
-        );
+      if (!data.fatal) return;
+      // A missing playlist just means nothing is publishing yet — wait for it
+      // instead of showing an error.
+      const noStreamYet =
+        data.details === Hls.ErrorDetails.MANIFEST_LOAD_ERROR ||
+        data.details === Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT ||
+        data.details === Hls.ErrorDetails.MANIFEST_PARSING_ERROR;
+      hls.destroy();
+      hlsRef.current = null;
+      if (noStreamYet) {
+        setWaiting(true);
+        setStatus("Waiting for the broadcast to start…");
+        return;
       }
+      setError(
+        `HLS error: ${data.type} / ${data.details}. ` +
+          "Make sure the broadcaster is live and MediaMTX is running."
+      );
     });
   }, []);
 
   const playWebrtc = useCallback(async (video: HTMLVideoElement) => {
-    setStatus(`Connecting WebRTC (WHEP): ${whepEndpoint()}`);
+    setStatus("Connecting (WebRTC / WHEP)…");
     try {
       const session = await whepPlay(whepEndpoint());
       whepRef.current = session;
       video.srcObject = session.stream;
       await video.play().catch(() => {});
+      setWaiting(false);
       setPlaying(true);
       setStatus("Playing (WebRTC / WHEP — sub-second)");
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      const msg = e instanceof Error ? e.message : String(e);
+      // MediaMTX returns 404 while nothing is publishing — that's "no stream
+      // yet", not a failure. Wait and connect automatically once it's live.
+      if (/\b404\b/.test(msg)) {
+        setWaiting(true);
+        setStatus("Waiting for the broadcast to start…");
+      } else {
+        setError(msg);
+      }
     }
   }, []);
 
@@ -113,12 +138,26 @@ export default function HlsPage() {
   const stop = useCallback(() => {
     teardown();
     setPlaying(false);
+    setWaiting(false);
     setStatus("Stopped");
   }, [teardown]);
+
+  const cancelWaiting = useCallback(() => {
+    setWaiting(false);
+    setStatus("Ready — start the broadcaster, then press Play");
+  }, []);
 
   useEffect(() => {
     return () => teardown();
   }, [teardown]);
+
+  // While waiting for a broadcast, retry quietly so playback starts as soon as
+  // the stream is live — no need to come back and press Play again.
+  useEffect(() => {
+    if (!waiting || playing) return;
+    const id = setInterval(() => play(), 3000);
+    return () => clearInterval(id);
+  }, [waiting, playing, play]);
 
   const showHud = playing && mode === "hls";
 
@@ -193,12 +232,25 @@ export default function HlsPage() {
               <circle cx="12" cy="12" r="9" />
               <path d="M10 8.5l6 3.5-6 3.5z" />
             </svg>
-            <strong>{streamLive ? "Stream is live" : "Nothing playing yet"}</strong>
+            <strong>
+              {waiting
+                ? "Waiting for the broadcast…"
+                : streamLive
+                ? "Stream is live"
+                : "Nothing playing yet"}
+            </strong>
             <span>
-              {streamLive
+              {waiting
+                ? "Playback starts automatically once you go live in Broadcast."
+                : streamLive
                 ? "Press “Play stream” to watch."
-                : "Start /broadcast first, then press “Play stream”."}
+                : "Go live in Broadcast first — then press “Play stream”."}
             </span>
+            {!streamLive && (
+              <Link href="/broadcast" target="_blank" className="placeholder-cta">
+                Open Broadcast<span aria-hidden> →</span>
+              </Link>
+            )}
           </div>
         )}
         {playing && <Watermark label={`${tag} · ${MEDIAMTX_STREAM}`} />}
@@ -212,13 +264,17 @@ export default function HlsPage() {
       {error && <div className="error">{error}</div>}
 
       <div className="controls">
-        {!playing ? (
-          <Button variant="primary" size="lg" onPress={play}>
-            Play stream
-          </Button>
-        ) : (
+        {playing ? (
           <Button variant="danger" size="lg" onPress={stop}>
             Stop
+          </Button>
+        ) : waiting ? (
+          <Button variant="secondary" size="lg" onPress={cancelWaiting}>
+            Cancel
+          </Button>
+        ) : (
+          <Button variant="primary" size="lg" onPress={play}>
+            Play stream
           </Button>
         )}
         <TheaterButton targetRef={wrapRef} />

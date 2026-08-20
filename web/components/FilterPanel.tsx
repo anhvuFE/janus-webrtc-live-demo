@@ -40,20 +40,12 @@ export function FilterPanel({
 
   return (
     <div className="fx-panel">
-      <div className="fx-group">
-        <span className="fx-label">Filter</span>
-        <div className="fx-chips">
-          {COLOR_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              className={`fx-chip${settings.preset === p.id ? " active" : ""}`}
-              onClick={() => set({ preset: p.id })}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ChipGroup
+        label="Filter"
+        items={COLOR_PRESETS}
+        activeId={settings.preset}
+        onSelect={(preset) => set({ preset })}
+      />
 
       <div className="fx-group">
         <span className="fx-label">Adjust</span>
@@ -92,50 +84,26 @@ export function FilterPanel({
         </div>
       </div>
 
-      <div className="fx-group">
-        <span className="fx-label">Face accessory</span>
-        <div className="fx-chips">
-          {ACCESSORIES.map((a) => (
-            <button
-              key={a.id}
-              className={`fx-chip${settings.accessory === a.id ? " active" : ""}`}
-              onClick={() => set({ accessory: a.id })}
-            >
-              {a.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ChipGroup
+        label="Face accessory"
+        items={ACCESSORIES}
+        activeId={settings.accessory}
+        onSelect={(accessory) => set({ accessory })}
+      />
 
-      <div className="fx-group">
-        <span className="fx-label">Frame</span>
-        <div className="fx-chips">
-          {FRAMES.map((f) => (
-            <button
-              key={f.id}
-              className={`fx-chip${settings.frame === f.id ? " active" : ""}`}
-              onClick={() => set({ frame: f.id })}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ChipGroup
+        label="Frame"
+        items={FRAMES}
+        activeId={settings.frame}
+        onSelect={(frame) => set({ frame })}
+      />
 
-      <div className="fx-group">
-        <span className="fx-label">Effect</span>
-        <div className="fx-chips">
-          {EFFECTS.map((e) => (
-            <button
-              key={e.id}
-              className={`fx-chip${settings.effect === e.id ? " active" : ""}`}
-              onClick={() => set({ effect: e.id })}
-            >
-              {e.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ChipGroup
+        label="Effect"
+        items={EFFECTS}
+        activeId={settings.effect}
+        onSelect={(effect) => set({ effect })}
+      />
 
       <div className="fx-group">
         <span className="fx-label">
@@ -164,6 +132,36 @@ export function FilterPanel({
         <span style={{ fontSize: 12, color: "var(--muted)" }}>
           Tap to add · drag on the video to move
         </span>
+      </div>
+    </div>
+  );
+}
+
+// A labelled row of single-select chips backed by a preset list.
+function ChipGroup<T extends string>({
+  label,
+  items,
+  activeId,
+  onSelect,
+}: {
+  label: string;
+  items: readonly { id: T; label: string }[];
+  activeId: T;
+  onSelect: (id: T) => void;
+}) {
+  return (
+    <div className="fx-group">
+      <span className="fx-label">{label}</span>
+      <div className="fx-chips">
+        {items.map((it) => (
+          <button
+            key={it.id}
+            className={`fx-chip${activeId === it.id ? " active" : ""}`}
+            onClick={() => onSelect(it.id)}
+          >
+            {it.label}
+          </button>
+        ))}
       </div>
     </div>
   );

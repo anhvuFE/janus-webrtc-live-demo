@@ -12,6 +12,7 @@ import { TheaterButton } from "@/components/TheaterButton";
 import { Button, Chip } from "@heroui/react";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
+import { LiveDot } from "@/components/LiveDot";
 import { viewerTag } from "@/lib/viewer";
 import { useLiveStatus } from "@/lib/live-status";
 
@@ -84,11 +85,18 @@ export default function WatchPage() {
             color={watching || presenterLive ? "success" : "default"}
             variant="soft"
           >
-            {watching
-              ? "● Watching"
-              : presenterLive
-              ? `● ${presenterName || "Presenter"} live`
-              : "Idle"}
+            {watching ? (
+              <>
+                <LiveDot />Watching
+              </>
+            ) : presenterLive ? (
+              <>
+                <LiveDot />
+                {presenterName || "Presenter"} live
+              </>
+            ) : (
+              "Idle"
+            )}
           </Chip>
         }
       />

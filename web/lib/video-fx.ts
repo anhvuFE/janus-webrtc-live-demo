@@ -166,6 +166,8 @@ export class VideoFx {
       /* ignore */
     }
     this.segmenter = this.faceLm = null;
+    this.particles = [];
+    this.stickerImgs.clear();
   }
 
   // ---- model loading (lazy) ----

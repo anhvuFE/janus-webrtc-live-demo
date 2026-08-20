@@ -14,6 +14,7 @@ import type { JanusInstance } from "@/lib/janus-types";
 import { TheaterButton } from "@/components/TheaterButton";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
+import { LiveDot } from "@/components/LiveDot";
 import { FilterPanel } from "@/components/FilterPanel";
 import { useVideoFx } from "@/lib/use-video-fx";
 import { useDisplayName } from "@/lib/identity";
@@ -240,11 +241,11 @@ export default function StagePage() {
         badge={
           <div style={{ display: "flex", gap: 8 }}>
             <Chip color={joined ? "success" : "default"} variant="soft">
-              {joined ? `● Live · ${count}` : "Lobby"}
+              {joined ? <><LiveDot />Live · {count}</> : "Lobby"}
             </Chip>
             {recording && (
               <Chip color="danger" variant="soft">
-                ● Rec
+                <LiveDot />Rec
               </Chip>
             )}
           </div>
@@ -266,7 +267,11 @@ export default function StagePage() {
               playsInline
               muted={active.muted}
             />
-            {joined && <span className="yt-live-badge">● LIVE</span>}
+            {joined && (
+              <span className="yt-live-badge">
+                <LiveDot />LIVE
+              </span>
+            )}
             <span className="yt-viewers">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />

@@ -14,6 +14,7 @@ import { Button, Chip, Input } from "@heroui/react";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
 import { FilterPanel } from "@/components/FilterPanel";
+import { LiveDot } from "@/components/LiveDot";
 import { useDisplayName } from "@/lib/identity";
 
 export default function PresentPage() {
@@ -95,7 +96,7 @@ export default function PresentPage() {
         subtitle="Publish your camera to the Janus room — viewers watch on /watch. Your broadcast keeps running if you switch to another tab."
         badge={
           <Chip color={live ? "success" : "default"} variant="soft">
-            {live ? "● Live" : "Offline"}
+            {live ? <><LiveDot />Live</> : "Offline"}
           </Chip>
         }
       />
@@ -143,7 +144,7 @@ export default function PresentPage() {
         <span>{status}</span>
         {recording && (
           <Chip color="danger" variant="soft" size="sm">
-            ● Rec
+            <LiveDot />Rec
           </Chip>
         )}
       </div>

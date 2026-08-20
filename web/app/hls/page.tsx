@@ -12,6 +12,7 @@ import { Watermark } from "@/components/Watermark";
 import { TheaterButton } from "@/components/TheaterButton";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
+import { LiveDot } from "@/components/LiveDot";
 import { viewerTag } from "@/lib/viewer";
 import { useLiveStatus } from "@/lib/live-status";
 
@@ -145,7 +146,17 @@ export default function HlsPage() {
             color={playing || streamLive ? "success" : "default"}
             variant="soft"
           >
-            {playing ? "● Playing" : streamLive ? "● Stream live" : "Idle"}
+            {playing ? (
+              <>
+                <LiveDot />Playing
+              </>
+            ) : streamLive ? (
+              <>
+                <LiveDot />Stream live
+              </>
+            ) : (
+              "Idle"
+            )}
           </Chip>
         }
       />

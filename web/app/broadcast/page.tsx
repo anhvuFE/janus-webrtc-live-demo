@@ -7,6 +7,7 @@ import { whipPublish, type WhipSession } from "@/lib/whip";
 import { makeWebrtcOutboundSampler } from "@/lib/hud-samplers";
 import { StatsHud } from "@/components/StatsHud";
 import { Watermark } from "@/components/Watermark";
+import { Button, Chip } from "@heroui/react";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
 import { FilterPanel } from "@/components/FilterPanel";
@@ -115,9 +116,9 @@ export default function BroadcastPage() {
           </>
         }
         badge={
-          <span className={`badge ${live ? "live" : ""}`}>
+          <Chip color={live ? "success" : "default"} variant="soft">
             {live ? "● Ingesting" : "Offline"}
-          </span>
+          </Chip>
         }
       />
 
@@ -181,13 +182,13 @@ export default function BroadcastPage() {
 
       <div className="controls">
         {!live ? (
-          <button className="primary" onClick={goLive} disabled={busy}>
+          <Button variant="primary" size="lg" isDisabled={busy} onPress={goLive}>
             {busy ? "Starting…" : `Start ingest (${source})`}
-          </button>
+          </Button>
         ) : (
-          <button className="danger" onClick={stop}>
+          <Button variant="danger" size="lg" onPress={stop}>
             Stop ingest
-          </button>
+          </Button>
         )}
       </div>
 

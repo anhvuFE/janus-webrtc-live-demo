@@ -65,7 +65,9 @@ a {
 /* ---------- Shared primitives ---------- */
 
 .container {
-  max-width: 1120px;
+  /* Fill most of a wide monitor so the video/stream isn't boxed in by big empty
+     margins; every tool page shares this so their widths still match. */
+  max-width: min(1600px, 95vw);
   margin: 0 auto;
   padding: 24px 20px 72px;
 }
@@ -1646,6 +1648,10 @@ button:disabled {
 .video-wrap {
   position: relative;
   aspect-ratio: 16 / 9;
+  /* Cap the height to the viewport so the preview + the controls/filters below
+     still fit without scrolling; the width follows to keep 16:9, centered. */
+  width: min(100%, calc(56vh * 16 / 9));
+  margin-inline: auto;
   background: radial-gradient(120% 130% at 50% 0%, #191c2b 0%, #0a0b12 60%);
   border: 1px solid var(--border);
   border-radius: 18px;

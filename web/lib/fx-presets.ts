@@ -26,14 +26,62 @@ export type ColorPreset =
 export type BackgroundMode = "none" | "blur" | "image";
 export type Accessory =
   | "none"
-  | "sunglasses"
-  | "glasses"
-  | "hat"
-  | "mustache"
+  | "cat"
+  | "dog"
+  | "bunny"
+  | "angel"
+  | "heart-glasses"
+  | "groucho"
+  | "beep"
+  | "sleep-mask"
+  | "crying"
   | "crown"
-  | "eyepatch"
-  | "monocle"
-  | "nose";
+  | "devil"
+  | "stars"
+  | "unicorn"
+  | "thought"
+  | "rainbow"
+  | "alien";
+
+export type Frame =
+  | "none"
+  | "polaroid"
+  | "film"
+  | "neon"
+  | "vhs"
+  | "gradient";
+
+export type Effect = "none" | "hearts" | "sparkle" | "neon" | "cartoon";
+
+// Loose decals the user can stamp onto the video and drag to reposition.
+export type DecalKind =
+  | "heart"
+  | "star"
+  | "bolt"
+  | "fire"
+  | "crown"
+  | "hundred"
+  | "sparkle"
+  | "arrow";
+
+export interface PlacedSticker {
+  id: string;
+  kind: DecalKind;
+  x: number; // 0–1 across the frame
+  y: number; // 0–1 down the frame
+  scale: number; // 1 = default size
+}
+
+export const DECALS: { kind: DecalKind; label: string }[] = [
+  { kind: "heart", label: "Heart" },
+  { kind: "star", label: "Star" },
+  { kind: "bolt", label: "Bolt" },
+  { kind: "fire", label: "Fire" },
+  { kind: "crown", label: "Crown" },
+  { kind: "hundred", label: "100" },
+  { kind: "sparkle", label: "Sparkle" },
+  { kind: "arrow", label: "Arrow" },
+];
 
 export interface FxSettings {
   preset: ColorPreset;
@@ -44,6 +92,9 @@ export interface FxSettings {
   background: BackgroundMode;
   backgroundImage?: string; // URL used when background === "image"
   accessory: Accessory;
+  frame: Frame;
+  effect: Effect;
+  stickers: PlacedSticker[];
 }
 
 export const DEFAULT_FX: FxSettings = {
@@ -54,7 +105,27 @@ export const DEFAULT_FX: FxSettings = {
   smooth: 0,
   background: "none",
   accessory: "none",
+  frame: "none",
+  effect: "none",
+  stickers: [],
 };
+
+export const FRAMES: { id: Frame; label: string }[] = [
+  { id: "none", label: "None" },
+  { id: "polaroid", label: "Polaroid" },
+  { id: "film", label: "Film" },
+  { id: "neon", label: "Neon" },
+  { id: "vhs", label: "VHS" },
+  { id: "gradient", label: "Gradient" },
+];
+
+export const EFFECTS: { id: Effect; label: string }[] = [
+  { id: "none", label: "None" },
+  { id: "hearts", label: "Hearts" },
+  { id: "sparkle", label: "Sparkle" },
+  { id: "neon", label: "Neon" },
+  { id: "cartoon", label: "Cartoon" },
+];
 
 export const COLOR_PRESETS: { id: ColorPreset; label: string }[] = [
   { id: "none", label: "None" },
@@ -79,17 +150,46 @@ export const COLOR_PRESETS: { id: ColorPreset; label: string }[] = [
   { id: "cyberpunk", label: "Cyberpunk" },
 ];
 
-export const ACCESSORIES: { id: Accessory; label: string }[] = [
+// Face-sticker overlays (Messenger-style PNGs vendored in /public/accessories).
+// Each is drawn onto the face anchored to the eye line:
+//   width = widthK × interocular distance; the sticker centre is offset dyK × d
+//   downward from the eye midpoint (negative = above the head).
+export interface AccessoryDef {
+  id: Accessory;
+  label: string;
+  img?: string;
+  widthK?: number; // sticker width = widthK × interocular distance
+  eyeK?: number; // vertical position of the sticker's eyes (0=top, 1=bottom)
+  dyK?: number; // extra fine nudge down the face axis, in units of d
+}
+
+export const ACCESSORIES: AccessoryDef[] = [
   { id: "none", label: "None" },
-  { id: "sunglasses", label: "Sunglasses" },
-  { id: "glasses", label: "Glasses" },
-  { id: "hat", label: "Party hat" },
-  { id: "mustache", label: "Mustache" },
-  { id: "crown", label: "Crown" },
-  { id: "eyepatch", label: "Eyepatch" },
-  { id: "monocle", label: "Monocle" },
-  { id: "nose", label: "Clown nose" },
+  { id: "cat", label: "Cat", img: "/accessories/cat.png", widthK: 3.1, eyeK: 0.58 },
+  { id: "dog", label: "Dog", img: "/accessories/dog.png", widthK: 3.1, eyeK: 0.56 },
+  { id: "bunny", label: "Bunny", img: "/accessories/bunny.png", widthK: 2.9, eyeK: 0.62 },
+  { id: "angel", label: "Angel", img: "/accessories/angel.png", widthK: 3.4, eyeK: 0.5, dyK: -0.15 },
+  { id: "heart-glasses", label: "Heart glasses", img: "/accessories/heart-glasses.png", widthK: 2.4, eyeK: 0.45 },
+  { id: "groucho", label: "Disguise", img: "/accessories/groucho.png", widthK: 2.4, eyeK: 0.4 },
+  { id: "beep", label: "Goggles", img: "/accessories/beep.png", widthK: 2.5, eyeK: 0.45 },
+  { id: "sleep-mask", label: "Sleep mask", img: "/accessories/sleep-mask.png", widthK: 2.5, eyeK: 0.45 },
+  { id: "crying", label: "Crying", img: "/accessories/crying.png", widthK: 2.6, eyeK: 0.4 },
+  { id: "crown", label: "Crown", img: "/accessories/crown.png", widthK: 2.4, eyeK: 0.5, dyK: -1.05 },
+  { id: "devil", label: "Devil", img: "/accessories/devil.png", widthK: 2.8, eyeK: 0.5, dyK: -0.75 },
+  { id: "stars", label: "Star eyes", img: "/accessories/stars.png", widthK: 2.6, eyeK: 0.5 },
+  { id: "unicorn", label: "Unicorn", img: "/accessories/unicorn.png", widthK: 1.4, eyeK: 0.5, dyK: -1.2 },
+  { id: "thought", label: "Thinking", img: "/accessories/thought.png", widthK: 2.4, eyeK: 0.5, dyK: -1.05 },
+  { id: "rainbow", label: "Rainbow", img: "/accessories/rainbow.png", widthK: 2.9, eyeK: 0.5, dyK: -1.05 },
+  { id: "alien", label: "Alien", img: "/accessories/alien.png", widthK: 2.6, eyeK: 0.5, dyK: -1.05 },
 ];
+
+const ACCESSORY_BY_ID: Record<string, AccessoryDef> = Object.fromEntries(
+  ACCESSORIES.map((a) => [a.id, a])
+);
+
+export function accessoryDef(id: Accessory): AccessoryDef | undefined {
+  return ACCESSORY_BY_ID[id];
+}
 
 // Bundled virtual backgrounds — real royalty-free photos vendored locally under
 // /public/fx so the canvas stays same-origin (no taint → captureStream works
@@ -172,6 +272,10 @@ export function cssFilter(s: FxSettings): string {
       parts.push("hue-rotate(-25deg)", "saturate(1.8)", "contrast(1.2)");
       break;
   }
+  // Cartoon effect: flatten to punchy, poster-like colours.
+  if (s.effect === "cartoon") {
+    parts.push("saturate(1.7)", "contrast(1.45)", "brightness(1.04)");
+  }
   return parts.join(" ");
 }
 
@@ -181,5 +285,10 @@ export function needsSegmentation(s: FxSettings): boolean {
 }
 
 export function needsFaceLandmarks(s: FxSettings): boolean {
-  return s.accessory !== "none";
+  return (
+    s.accessory !== "none" ||
+    s.effect === "hearts" ||
+    s.effect === "sparkle" ||
+    s.effect === "neon"
+  );
 }

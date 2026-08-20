@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { RecordingEntry } from "@/lib/recordings";
 import { NotesPanel } from "@/components/NotesPanel";
 import { TheaterButton } from "@/components/TheaterButton";
+import { Button } from "@heroui/react";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
 
@@ -63,9 +64,14 @@ export default function RecordingsPage() {
           </>
         }
         badge={
-          <button onClick={load} disabled={loading}>
+          <Button
+            variant="secondary"
+            size="sm"
+            isDisabled={loading}
+            onPress={load}
+          >
             {loading ? "Refreshing…" : "Refresh"}
-          </button>
+          </Button>
         }
       />
 

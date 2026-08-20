@@ -9,6 +9,7 @@ import {
 import type { JanusInstance } from "@/lib/janus-types";
 import { Watermark } from "@/components/Watermark";
 import { TheaterButton } from "@/components/TheaterButton";
+import { Button, Chip } from "@heroui/react";
 import { AppHeader } from "@/components/AppHeader";
 import { PageHero } from "@/components/PageHero";
 import { viewerTag } from "@/lib/viewer";
@@ -79,13 +80,16 @@ export default function WatchPage() {
         title="Viewer"
         subtitle="Subscribe to the active presenter's live WebRTC feed."
         badge={
-          <span className={`badge ${watching || presenterLive ? "live" : ""}`}>
+          <Chip
+            color={watching || presenterLive ? "success" : "default"}
+            variant="soft"
+          >
             {watching
               ? "● Watching"
               : presenterLive
               ? `● ${presenterName || "Presenter"} live`
               : "Idle"}
-          </span>
+          </Chip>
         }
       />
 
@@ -129,13 +133,13 @@ export default function WatchPage() {
 
       <div className="controls">
         {!watching ? (
-          <button className="primary" onClick={join} disabled={busy}>
+          <Button variant="primary" size="lg" isDisabled={busy} onPress={join}>
             {busy ? "Joining…" : "Watch live"}
-          </button>
+          </Button>
         ) : (
-          <button className="danger" onClick={leave}>
+          <Button variant="danger" size="lg" onPress={leave}>
             Leave
-          </button>
+          </Button>
         )}
         <TheaterButton targetRef={wrapRef} />
       </div>

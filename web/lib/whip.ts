@@ -12,6 +12,27 @@ export interface WhipSession {
   pc: RTCPeerConnection;
 }
 
+/**
+ * Prefer H264 for the video transceiver.
+ *
+ * MediaMTX records fragmented MP4 and muxes LL-HLS, both of which only support
+ * H264/H265/AV1 video — they silently drop VP8/VP9 (you get audio-only files
+ * and audio-only HLS). Chrome offers VP8 first by default, so without this the
+ * recordings and the buffered player have no picture. Keep the other codecs as
+ * a fallback so publishing still works where H264 send isn't available.
+ */
+function preferH264(t: RTCRtpTransceiver): void {
+  if (t.sender.track?.kind !== "video") return;
+  if (typeof t.setCodecPreferences !== "function") return;
+  const caps = RTCRtpSender.getCapabilities("video");
+  if (!caps) return;
+  const isH264 = (c: RTCRtpCodec) => c.mimeType.toLowerCase() === "video/h264";
+  const h264 = caps.codecs.filter(isH264);
+  if (!h264.length) return;
+  const others = caps.codecs.filter((c) => !isH264(c));
+  t.setCodecPreferences([...h264, ...others]);
+}
+
 /** Wait until ICE gathering finishes (WHIP is non-trickle by default). */
 function waitIceGatheringComplete(
   pc: RTCPeerConnection,
@@ -49,7 +70,10 @@ export async function whipPublish(
 
   // Sendonly: we only push media up to the ingest server.
   stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-  pc.getTransceivers().forEach((t) => (t.direction = "sendonly"));
+  pc.getTransceivers().forEach((t) => {
+    t.direction = "sendonly";
+    preferH264(t);
+  });
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);

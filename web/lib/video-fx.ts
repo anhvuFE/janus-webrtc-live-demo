@@ -98,6 +98,10 @@ export class VideoFx {
   private stickerImgs = new Map<string, HTMLImageElement>();
   private particles: Particle[] = [];
   private lastSpawn = 0;
+  // Cached "gradient" frame stroke — depends only on canvas size, so we rebuild
+  // it on resize instead of every frame.
+  private frameGradient: CanvasGradient | null = null;
+  private frameGradientKey = "";
   private onError?: (msg: string) => void;
 
   constructor(source: MediaStream, settings: FxSettings, onError?: (m: string) => void) {
@@ -302,11 +306,7 @@ export class VideoFx {
     };
     switch (kind) {
       case "heart": {
-        ctx.beginPath();
-        ctx.moveTo(0, s * 0.35);
-        ctx.bezierCurveTo(s * 0.55, -s * 0.25, s * 0.5, -s * 0.72, 0, -s * 0.35);
-        ctx.bezierCurveTo(-s * 0.5, -s * 0.72, -s * 0.55, -s * 0.25, 0, s * 0.35);
-        ctx.closePath();
+        traceHeart(ctx, s);
         fillStroke("#f74d8b");
         break;
       }
@@ -384,12 +384,7 @@ export class VideoFx {
         ctx.fillStyle = "#fff3b0";
         ctx.shadowColor = "#ffe27a";
         ctx.shadowBlur = s * 0.5;
-        ctx.beginPath();
-        ctx.moveTo(0, -s);
-        ctx.quadraticCurveTo(0, 0, s, 0);
-        ctx.quadraticCurveTo(0, 0, 0, s);
-        ctx.quadraticCurveTo(0, 0, -s, 0);
-        ctx.quadraticCurveTo(0, 0, 0, -s);
+        traceSparkle(ctx, s);
         ctx.fill();
         ctx.shadowBlur = 0;
         break;
@@ -504,12 +499,8 @@ export class VideoFx {
         const ap = h >= 12 ? "PM" : "AM";
         const h12 = ((h + 11) % 12) + 1;
         const mm = String(now.getMinutes()).padStart(2, "0");
-        const MON = [
-          "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-          "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
-        ];
         const timeStr = `${ap} ${h12}:${mm}`;
-        const dateStr = `${MON[now.getMonth()]} ${now.getDate()} ${now.getFullYear()}`;
+        const dateStr = `${MONTHS[now.getMonth()]} ${now.getDate()} ${now.getFullYear()}`;
         ctx.fillStyle = "rgba(255,255,255,0.92)";
         ctx.textAlign = "left";
         ctx.font = `bold ${Math.round(W * 0.03)}px "Courier New", monospace`;
@@ -522,10 +513,15 @@ export class VideoFx {
       }
       case "gradient": {
         const inset = Math.round(W * 0.02);
-        const g = ctx.createLinearGradient(0, 0, W, H);
-        g.addColorStop(0, "#f21ec9");
-        g.addColorStop(1, "#22d3ee");
-        ctx.strokeStyle = g;
+        const key = `${W}x${H}`;
+        if (this.frameGradientKey !== key || !this.frameGradient) {
+          const g = ctx.createLinearGradient(0, 0, W, H);
+          g.addColorStop(0, "#f21ec9");
+          g.addColorStop(1, "#22d3ee");
+          this.frameGradient = g;
+          this.frameGradientKey = key;
+        }
+        ctx.strokeStyle = this.frameGradient;
         ctx.lineWidth = Math.round(W * 0.02);
         roundRect(inset, inset, W - inset * 2, H - inset * 2, Math.round(W * 0.05));
         ctx.stroke();
@@ -727,11 +723,7 @@ export class VideoFx {
   private drawHeart(s: number) {
     const { ctx } = this;
     ctx.fillStyle = "#f74d8b";
-    ctx.beginPath();
-    ctx.moveTo(0, s * 0.35);
-    ctx.bezierCurveTo(s * 0.55, -s * 0.25, s * 0.5, -s * 0.7, 0, -s * 0.35);
-    ctx.bezierCurveTo(-s * 0.5, -s * 0.7, -s * 0.55, -s * 0.25, 0, s * 0.35);
-    ctx.closePath();
+    traceHeart(ctx, s);
     ctx.fill();
   }
 
@@ -740,13 +732,7 @@ export class VideoFx {
     ctx.fillStyle = "#fff3b0";
     ctx.shadowColor = "#ffe27a";
     ctx.shadowBlur = s * 0.6;
-    ctx.beginPath();
-    // 4-point twinkle
-    ctx.moveTo(0, -s);
-    ctx.quadraticCurveTo(0, 0, s, 0);
-    ctx.quadraticCurveTo(0, 0, 0, s);
-    ctx.quadraticCurveTo(0, 0, -s, 0);
-    ctx.quadraticCurveTo(0, 0, 0, -s);
+    traceSparkle(ctx, s);
     ctx.fill();
     ctx.shadowBlur = 0;
   }
@@ -761,6 +747,35 @@ export class VideoFx {
     }
     return img;
   }
+}
+
+// Month labels for the VHS frame clock — module-level so the render loop doesn't
+// rebuild the array every frame.
+const MONTHS = [
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+] as const;
+
+// Shape paths shared by the static stickers (drawDecal) and the animated
+// particles (drawHeart/drawSparkle). They only trace the path; callers apply
+// their own fill/stroke/shadow styling.
+function traceHeart(ctx: CanvasRenderingContext2D, s: number) {
+  ctx.beginPath();
+  ctx.moveTo(0, s * 0.35);
+  ctx.bezierCurveTo(s * 0.55, -s * 0.25, s * 0.5, -s * 0.7, 0, -s * 0.35);
+  ctx.bezierCurveTo(-s * 0.5, -s * 0.7, -s * 0.55, -s * 0.25, 0, s * 0.35);
+  ctx.closePath();
+}
+
+function traceSparkle(ctx: CanvasRenderingContext2D, s: number) {
+  // 4-point twinkle
+  ctx.beginPath();
+  ctx.moveTo(0, -s);
+  ctx.quadraticCurveTo(0, 0, s, 0);
+  ctx.quadraticCurveTo(0, 0, 0, s);
+  ctx.quadraticCurveTo(0, 0, -s, 0);
+  ctx.quadraticCurveTo(0, 0, 0, -s);
+  ctx.closePath();
 }
 
 function drawCover(
